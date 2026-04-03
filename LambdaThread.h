@@ -1,4 +1,7 @@
 // Utility class for calling a lambda on a new thread.
+#include <functional>
+#include <limits>
+#include <QObject>
 #include <QThread>
 #include <QSemaphore>
 

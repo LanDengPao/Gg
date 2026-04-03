@@ -2,9 +2,17 @@
 .codex/
 .claude/
 x64/
+build/
+build*/
+cmake-build-*/
 Debug/
 Release/
 ipch/
 *.user
 *.VC.db
 *.VC.opendb
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake

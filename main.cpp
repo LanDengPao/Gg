@@ -16,7 +16,5 @@ int main(int argc, char *argv[])
     thread->setName(QString("get mouse interval"));
     thread->selfDelete(true);
     thread->start();
-    app.exec();
-
-    return ;
+    return app.exec();
 }
