@@ -1,0 +1,10 @@
+.vs/
+.codex/
+.claude/
+x64/
+Debug/
+Release/
+ipch/
+*.user
+*.VC.db
+*.VC.opendb
