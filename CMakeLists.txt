@@ -18,9 +18,18 @@ set(PROJECT_SOURCES
     Gg.h
     Gg.qrc
     Gg.ui
-    LambdaThread.cpp
-    LambdaThread.h
     main.cpp
+    AppController.cpp
+    AppController.h
+    AppTypes.h
+    MetricsEngine.cpp
+    MetricsEngine.h
+    SparklineWidget.cpp
+    SparklineWidget.h
+    TrajectoryWidget.cpp
+    TrajectoryWidget.h
+    WorkspaceRepository.cpp
+    WorkspaceRepository.h
 )
 
 if(QT_VERSION_MAJOR GREATER_EQUAL 6)
@@ -36,7 +45,7 @@ endif()
 target_link_libraries(Gg PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
 if(MSVC)
-    target_compile_options(Gg PRIVATE /W3 /permissive- /MP)
+    target_compile_options(Gg PRIVATE /W3 /permissive- /MP /utf-8)
 endif()
 
 set_target_properties(Gg PROPERTIES

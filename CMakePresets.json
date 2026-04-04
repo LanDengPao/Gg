@@ -10,7 +10,7 @@
       "name": "base",
       "hidden": true,
       "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/build/${presetName}",
+      "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_PREFIX_PATH": "D:/QT/QT5.14/5.14.2/msvc2017_64"
       }

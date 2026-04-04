@@ -1,0 +1,28 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug (Gg.exe)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/Gg.exe",
+            "args": [],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "symbolSearchPath": "${workspaceFolder}/build/Debug",
+            "visualizerFile": "c:\\Users\\LL\\AppData\\Roaming\\Code\\User\\workspaceStorage\\db04a1733a14b68f9cfdecbbc41bd741\\tonka3000.qtvsctools\\qt.natvis.xml"
+        },
+        {
+            "name": "Release (Gg.exe)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Release/Gg.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "visualizerFile": "c:\\Users\\LL\\AppData\\Roaming\\Code\\User\\workspaceStorage\\db04a1733a14b68f9cfdecbbc41bd741\\tonka3000.qtvsctools\\qt.natvis.xml"
+        }
+    ]
+}
