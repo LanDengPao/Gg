@@ -28,6 +28,8 @@ set(PROJECT_SOURCES
     SparklineWidget.h
     TrajectoryWidget.cpp
     TrajectoryWidget.h
+    WinDeviceInfo.cpp
+    WinDeviceInfo.h
     WorkspaceRepository.cpp
     WorkspaceRepository.h
 )
@@ -42,7 +44,10 @@ else()
     add_executable(Gg WIN32 ${PROJECT_SOURCES})
 endif()
 
-target_link_libraries(Gg PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(Gg PRIVATE
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Setupapi
+)
 
 if(MSVC)
     target_compile_options(Gg PRIVATE /W3 /permissive- /MP /utf-8)

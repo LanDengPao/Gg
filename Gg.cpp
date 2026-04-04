@@ -1,4 +1,5 @@
 #include "Gg.h"
+#include "WinDeviceInfo.h"
 
 #include <QAbstractButton>
 #include <QAbstractItemView>
@@ -1009,7 +1010,10 @@ DeviceInfo Gg::resolveDeviceInfo(void* handle)
 
             QString deviceName = QString::fromWCharArray(name.data());
             info.rawDeviceName = deviceName;
-            info.displayName = deviceName.section('\\', -1);
+            populateFriendlyMouseName(deviceName, info);
+            if (info.displayName.isEmpty()) {
+                info.displayName = QStringLiteral("Mouse");
+            }
 
             if (deviceName.contains(QStringLiteral("#VID_"), Qt::CaseInsensitive)) {
                 QString vid = deviceName;
