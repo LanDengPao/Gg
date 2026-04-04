@@ -1,154 +1,181 @@
 # AGENTS.md
 
-## 项目概述
+## 项目定位
+这是一个基于 C++17 / Qt Widgets / Windows API 的桌面应用，目标是做鼠标轮询率测试、轨迹预览和性能分析。
+当前主干代码包含：
+- `Gg` 主窗口与多页面 UI
+- `AppController` 会话控制与导出
+- `MetricsEngine` 实时统计计算
+- `WorkspaceRepository` 工作区持久化
+- `WinDeviceInfo` 基于 SetupAPI 的鼠标信息补全
 
-这是一个基于 C++ / Qt Widgets 的 Windows 桌面应用，用于鼠标轮询率测试和性能分析。
+## 代理工作约定
+- 与用户交流默认使用中文。
+- 默认使用 Windows 风格命令和路径。
+- 只维护一个 `build/` 目录，不要创建 `build2/`、`cmake-build-debug/` 之类的新构建目录。
+- 先做最小正确修改，不要顺手重构整仓或大规模改格式。
+- 不要编辑 CMake/Qt 生成物，如 `ui_*.h`、`moc_*.cpp`、`qrc_*.cpp`、`build/` 下文件。
+
+## 现有规则文件
+- 仓库中存在 `CLAUDE.md`，其中有效信息已吸收进本文件：中文交流、Windows 优先、当前无 lint/单测。
+- 未发现 `.cursorrules`。
+- 未发现 `.cursor/rules/`。
+- 未发现 `.github/copilot-instructions.md`。
+
+## 仓库结构
+- `main.cpp`: Qt 应用入口。
+- `Gg.h` / `Gg.cpp`: 主窗口、页面构建、Raw Input 接入、UI 刷新。
+- `AppController.*`: 测试开始/结束、采样写盘、历史读取、导出。
+- `MetricsEngine.*`: Hz、速度、抖动、稳定度等实时统计。
+- `WorkspaceRepository.*`: `workspace/sessions/<session_id>` 下的 JSON/BIN 持久化。
+- `AppTypes.h`: 枚举、结构体、`uiText()`、JSON 辅助函数。
+- `SparklineWidget.*` / `TrajectoryWidget.*`: 自绘图表控件。
+- `WinDeviceInfo.*`: Windows 设备路径、VID/PID、友好名称解析。
+- `Gg.ui`: 已加入 CMake AUTOUIC，但当前主窗口实际由 `Gg::buildUi()` 代码构建；改主界面先看 `Gg.cpp`，不要假设 `.ui` 是真实来源。
 
 ## 环境要求
-
-- Windows 10/11
-- Visual Studio 2022
-- CMake 3.16+
-- Qt 5.14+ 或 Qt 6
+- Windows 10/11、Visual Studio 2022、CMake 3.16+、Qt 5.14+ 或 Qt 6。
+- `CMakePresets.json` 当前把 `CMAKE_PREFIX_PATH` 指向 `D:/QT/QT5.14/5.14.2/msvc2017_64`。
+- 如果本机 Qt 路径不同，先改 `CMakePresets.json` 或在手动配置时覆盖 `-DCMAKE_PREFIX_PATH`。
 
 ## 构建命令
-
-- 仅维持一个build目录,禁止build2等等
-
-### 使用 CMake Presets
+推荐优先使用 CMake Presets：
 
 ```powershell
-# Debug 构建
 cmake --preset debug
 cmake --build --preset build-debug
-
-# Release 构建
 cmake --preset release
 cmake --build --preset build-release
 ```
 
-### 手动构建
+只重编译主目标时可用：
 
 ```powershell
-# 配置（根据本机 Qt 路径调整）
+cmake --build --preset build-debug --target Gg
+cmake --build --preset build-release --target Gg
+```
+
+手动配置方式：
+
+```powershell
 cmake -S . -B build -DCMAKE_PREFIX_PATH="D:/QT/QT5.14/5.14.2/msvc2017_64"
-
-# 编译
-cmake --build build --config Debug
+cmake --build build --config Debug --target Gg
+cmake --build build --config Release --target Gg
 ```
 
-### 输出目录
+## 运行命令
+当前工作区里实际产物路径是 `build/Debug/Gg.exe` 和 `build/Release/Gg.exe`。
 
-- Debug: `build/Debug/Debug/Gg.exe`
-- Release: `build/Release/Release/Gg.exe`
-
-## 测试
-
-当前项目没有独立的单元测试。验证方式：
-1. 成功构建 = 编译通过
-2. 运行 `Gg.exe` 手动测试功能
-
-## 代码风格指南
-
-### 格式化
-
-- 使用 4 空格缩进
-- 行长度无硬性限制，但保持简洁
-- 大括号风格：K&R（同一行开括号）
-
-### 命名约定
-
-- **类名**: PascalCase (如 `AppController`, `MetricsEngine`)
-- **方法名**: camelCase (如 `startTest`, `ingestSample`)
-- **成员变量**: m_ 前缀 + camelCase (如 `m_isRecording`, `m_metrics`)
-- **常量**: k 前缀 + PascalCase (如 `kSampleMagic`)
-- **枚举值**: PascalCase (如 `SessionStatus::Recording`)
-- **文件命名**: 与类名一致，.cpp/.h 扩展名
-
-### 类型使用
-
-- **Qt 类型**: 优先使用 Qt 类型 (QString, QVector, QPoint, QPointF, QDateTime 等)
-- **基础类型**: 使用标准 C++ 类型 (int, double, bool)
-- **Windows API**: 使用 Windows SDK 类型 (UINT, DWORD, HWND 等)
-- **避免**: raw pointer，优先使用智能指针或 Qt 对象父子关系
-
-### 头文件包含
-
-- 按以下顺序分组：
-  1. 对应头文件（如果有）
-  2. Qt 系统头文件
-  3. 标准库头文件
-  4. Windows SDK 头文件
-  5. 本项目头文件
-- 使用前向声明减少编译依赖
-- 本地头文件用双引号，自带头文件用尖括号
-
-示例：
-```cpp
-#include "Gg.h"
-
-#include <QVector>
-#include <QString>
-
-#include <algorithm>
-#include <cmath>
-
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-
-#include "AppController.h"
-#include "MetricsEngine.h"
+```powershell
+.\build\Debug\Gg.exe
+.\build\Release\Gg.exe
 ```
 
-### 编码规范
+- 旧文档里出现过 `build/Debug/Debug/Gg.exe` 之类路径；以当前 `build/` 目录实际布局为准。
 
-- **源文件编码**: UTF-8 BOM
-- **字符串**: 使用 QStringLiteral() 或 tr() 处理用户可见文本
-- **中文注释**: 可以使用中文，但保持专业简洁
-- **禁止**: 禁止在代码中硬编码 secrets/keys
+## 测试与 lint
+- 当前仓库没有配置 lint 工具。
+- 当前仓库没有 `enable_testing()` / `add_test()`，也没有独立单元测试目标。
+- 因此当前不存在“单个测试”可运行。
 
-### 错误处理
+当前可执行的验证方式：
 
-- 使用 QString* outError 参数模式返回错误信息
-- 检查返回值并传播错误
-- 避免异常（Qt 风格）
-
-### Qt 特定规则
-
-- **QObject 子类**: 使用 Q_OBJECT 宏
-- **信号槽**: 使用 connect() 连接，优先使用 lambda 或 member function
-- **内存管理**: Qt 对象使用父子关系，非 Qt 对象注意生命周期
-- **MOC**: 需要 MOC 的类必须继承 QObject 并包含 Q_OBJECT
-- **UI 文件**: Gg.ui 由 CMake 自动处理，勿手动修改生成的 ui_Gg.h
-
-### 代码组织
-
-- 单文件类：.h 和 .cpp 在同一目录
-- 类声明在 .h，实现在 .cpp
-- 私有成员用 d-pointer 或简单成员变量（避免过度抽象）
-- 合理使用 namespace 区分模块
-
-## 项目结构
-
-```
-E:\repo\Gg\
-├── Gg.cpp / Gg.h       # 主窗口
-├── main.cpp             # 入口
-├── AppController.cpp/h  # 应用控制器
-├── AppTypes.h           # 类型定义
-├── MetricsEngine.cpp/h  # 指标计算引擎
-├── SparklineWidget.cpp/h # 折线图组件
-├── TrajectoryWidget.cpp/h # 轨迹图组件
-├── WorkspaceRepository.cpp/h # 文件仓储
-├── LambdaThread.cpp/h   # 后台线程封装
-├── CMakeLists.txt       # 构建配置
-└── AGENTS.md           # 本文件
+```powershell
+cmake --build --preset build-debug --target Gg
+.\build\Debug\Gg.exe
 ```
 
-## 注意事项
+如果只是想确认 CTest 状态，可以运行：
 
-1. **Raw Input**: 注册 raw input 需在窗口显示后（showEvent 中或 QTimer::singleShot）
-2. **布局避免冲突**: 每个 QWidget 只设置一个主 layout
-3. **计时器**: 类成员 QTimer 可能导致栈溢出，优先在 showEvent 中动态创建
-4. **链接器**: 确保 CMakeLists.txt 包含所有 .cpp 文件
+```powershell
+ctest --test-dir build -C Debug --output-on-failure
+```
+
+- 目前它会报告没有测试，这是正常现象。
+- 如果未来补上 CTest，单个测试的标准命令是 `ctest --test-dir build -C Debug -R <test-name> --output-on-failure`。
+
+## 代码风格总则
+- 使用 4 空格缩进。
+- 大括号使用 K&R 风格。
+- 不强制极短行，但保持表达紧凑、易扫读。
+- 优先做局部修改，避免无意义的文件级格式化。
+- 头文件用 `#pragma once`。
+- 倾向把小型工具函数放在匿名命名空间中。
+
+## include / import 约定
+- `.cpp` 文件优先包含自己的头文件。
+- 现有 include 顺序并不完全统一；修改老文件时优先保持局部既有顺序，除非你正在顺手修正明显问题。
+- 新代码建议顺序：本文件头、Qt 头、标准库头、Windows SDK 头、项目内其他头。
+- 需要包含 `windows.h` 时，先定义 `WIN32_LEAN_AND_MEAN` 与 `NOMINMAX`。
+- 头文件尽量用前向声明减少编译依赖。
+- 项目内头文件使用双引号，系统/Qt 头文件使用尖括号。
+
+## 命名约定
+- 类名：`PascalCase`。
+- 方法、普通函数、局部变量：`camelCase`。
+- 成员变量：`m_` 前缀。
+- 常量：`k` 前缀 + `PascalCase`。
+- 枚举类型使用 `enum class`，枚举值使用 `PascalCase`。
+- 文件名与核心类名保持一致，使用 `.h` / `.cpp`。
+
+## 类型与数据结构
+- UI、字符串、时间、容器优先使用 Qt 类型，如 `QString`、`QVector`、`QDateTime`、`QPointF`。
+- 纯数值和算法场景使用标准 C++ 基础类型；Windows API 边界使用 `HWND`、`DWORD`、`UINT` 等类型。
+- 当前代码广泛使用值语义结构体，新增状态优先考虑值类型而不是堆分配对象。
+- QWidget/QObject 生命周期优先依赖 Qt 父子关系管理。
+- `Gg` 中大量控件成员是裸指针，但默认由 Qt parent 托管；不要无故引入另一套所有权模型。
+
+## 字符串、本地化与序列化
+- 固定字符串优先使用 `QStringLiteral()`。
+- 面向用户的中英文文案优先走 `uiText(english, chinese)`，保持双语切换行为一致。
+- 时间序列化统一使用 `Qt::ISODate`。
+- JSON 字段名保持小写蛇形，如 `session_id`、`avg_hz`。
+- 二进制采样文件继续沿用 `QDataStream::LittleEndian`、`kSampleMagic`、`kSampleVersion`。
+- 保持现有文件编码；仓库里部分源文件带 UTF-8 BOM，改动时不要无意破坏编码。
+
+## 错误处理
+- 不要引入异常流；当前工程基本不用 `throw/try/catch`。
+- 失败路径优先返回 `bool`，并通过 `QString* error` 输出错误信息。
+- 先检查前置条件，尽早返回。
+- 写文件优先使用 `QSaveFile`，提交失败要向上返回错误。
+- 新错误信息应保持专业、简洁，并与现有中英文提示风格一致。
+
+## Qt / Widgets 约定
+- 只有需要信号槽、元对象能力时才在类里加 `Q_OBJECT`。
+- 信号槽连接优先使用函数指针语法或简短 lambda。
+- 每个 `QWidget` 只设置一个主 layout，不要重复 `setLayout()`。
+- 当前界面主题是深色风格；修改 UI 时尽量延续现有视觉语言。
+- `SparklineWidget` 与 `TrajectoryWidget` 使用自绘，改动时注意空数据态文案和抗锯齿设置。
+- `Gg.ui` 虽在 CMake 里，但当前主窗口真实结构来自 `Gg::buildUi()`；改主界面先看 `Gg.cpp`。
+- 不要编辑 `ui_*.h`、`moc_*.cpp`、`qrc_*.cpp` 等生成文件。
+
+## Windows / Raw Input 约定
+- Raw Input 注册必须发生在窗口已经显示、拥有真实 HWND 之后。
+- 当前实现是在 `Gg::showEvent()` 首次触发后用 `QTimer::singleShot(0, ...)` 调 `registerRawInput()`；扩展相关逻辑时沿用这个时序。
+- `nativeEvent()` 负责接收 `WM_INPUT`，不要把这条链路拆散到多个不相关位置。
+- 设备名补全走 `WinDeviceInfo.cpp` 的 SetupAPI 逻辑；改设备识别前先理解 VID/PID 与路径匹配策略。
+
+## 持久化与工作区约定
+- 工作区根目录来自 `QStandardPaths::AppDataLocation` 下的 `workspace/`。
+- 会话目录格式是 `workspace/sessions/<session_id>/`。
+- 当前核心文件名固定为 `session.json`、`summary.json`、`samples.bin`。
+- 不要随意修改这些文件名、字段名、magic/version，除非同步处理读取兼容性。
+
+## 编辑建议
+- 不要因为看到旧说明就假设它仍然正确，先以当前源码和 `build/` 产物为准。
+- `CLAUDE.md` 中关于旧 `Gg.sln`、旧输出路径和“UI 主要来自 Gg.ui”的描述已经部分过时；优先相信当前 CMake 与源码实现。
+- 增加新 `.cpp` 文件时，记得同步加入 `CMakeLists.txt` 的 `PROJECT_SOURCES`。
+- 不要为了“统一风格”而大面积重排 include、翻译文案或改动序列化字段。
+
+## 变更后自检
+
+```powershell
+cmake --build --preset build-debug --target Gg
+.\build\Debug\Gg.exe
+```
+
+重点手动确认：
+- 应用能启动。
+- 主窗口能显示。
+- Raw Input 没有因为注册时机错误而失效。
+- 历史记录、导出、图表或设备信息相关改动没有明显回归。
