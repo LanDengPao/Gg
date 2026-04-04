@@ -1,62 +1,44 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.21)
 
-project(Gg VERSION 0.1.0 LANGUAGES CXX)
+# 项目元数据
+project(Gg VERSION 0.2.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+# 加载全局配置
+include(cmake/config.cmake)
 
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTORCC ON)
-
+# Qt 依赖查找
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
-set(PROJECT_SOURCES
-    Gg.cpp
-    Gg.h
-    Gg.qrc
-    Gg.ui
-    main.cpp
-    AppController.cpp
-    AppController.h
-    AppTypes.h
-    MetricsEngine.cpp
-    MetricsEngine.h
-    SparklineWidget.cpp
-    SparklineWidget.h
-    TrajectoryWidget.cpp
-    TrajectoryWidget.h
-    WinDeviceInfo.cpp
-    WinDeviceInfo.h
-    WorkspaceRepository.cpp
-    WorkspaceRepository.h
+# 主库源码
+file(GLOB_RECURSE LIB_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
+list(FILTER LIB_SOURCES EXCLUDE REGEX ".*main\\.cpp$")
+
+# 头文件（用于 MOC 自动生成）
+file(GLOB_RECURSE LIB_HEADERS CONFIGURE_DEPENDS "include/Gg/*.h")
+
+# 主程序
+add_executable(Gg WIN32 "src/main.cpp" ${LIB_SOURCES} ${LIB_HEADERS})
+
+# C++ 标准
+target_compile_features(Gg PRIVATE cxx_std_23)
+
+# 头文件搜索路径（PUBLIC 让依赖也能使用）
+target_include_directories(Gg PUBLIC 
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
 )
+target_include_directories(Gg PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/Gg)
 
-if(QT_VERSION_MAJOR GREATER_EQUAL 6)
-    qt_add_executable(Gg
-        WIN32
-        MANUAL_FINALIZATION
-        ${PROJECT_SOURCES}
-    )
-else()
-    add_executable(Gg WIN32 ${PROJECT_SOURCES})
-endif()
-
-target_link_libraries(Gg PRIVATE
-    Qt${QT_VERSION_MAJOR}::Widgets
+# 链接库
+target_link_libraries(Gg PRIVATE 
+    Qt${QT_VERSION_MAJOR}::Widgets 
+    Qt${QT_VERSION_MAJOR}::Core
     Setupapi
 )
 
-if(MSVC)
-    target_compile_options(Gg PRIVATE /W3 /permissive- /MP /utf-8)
-endif()
+# Windows 特定设置
+set_target_properties(Gg PROPERTIES WIN32_EXECUTABLE TRUE)
 
-set_target_properties(Gg PROPERTIES
-    WIN32_EXECUTABLE TRUE
-)
-
-if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(Gg)
-endif()
+# 测试（当前未实际使用）
+enable_testing()

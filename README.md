@@ -1,68 +1,48 @@
-# Gg
+# Gg - 鼠标设备测试工具
 
-这是一个基于 C++ / Qt Widgets 的 Windows 桌面应用，当前已切换为纯 CMake 构建。
+Windows 桌面应用，用于测试和分析鼠标设备的性能指标。
+
+## 功能特性
+
+- **轮询率测试** - 检测鼠标报告率（125Hz/500Hz/1000Hz 等）
+- **轨迹稳定性** - 分析鼠标移动的精度和稳定性
+- **设备识别** - 自动识别连接的 HID 鼠标设备
+- **数据记录** - 保存测试会话，支持 JSON 格式导出
+- **历史对比** - 对比多次测试结果
+- **双语支持** - 中文/英文界面
 
 ## 环境要求
 
-- Windows
+- Windows 10/11
 - Visual Studio 2022
-- CMake 3.16 及以上
-- Qt 5 或 Qt 6
+- Qt 5.14+ (msvc2017_64)
 
-当前仓库内的 [CMakePresets.json](E:\repo\Gg\CMakePresets.json) 已配置本机 Qt 路径：
+## 构建
 
-```text
-D:/QT/QT5.14/5.14.2/msvc2017_64
-```
-
-如果你的 Qt 安装目录不同，需要先修改该文件中的 `CMAKE_PREFIX_PATH`。
-
-## 构建方式
-
-### 使用 CMake Presets
-
-配置 Debug：
-
-```powershell
+```bash
+# Debug
 cmake --preset debug
-```
-
-编译 Debug：
-
-```powershell
 cmake --build --preset build-debug
-```
 
-配置 Release：
-
-```powershell
+# Release
 cmake --preset release
-```
-
-编译 Release：
-
-```powershell
 cmake --build --preset build-release
 ```
 
-### 不使用 Presets
+输出: `build/bin/Debug/Gg.exe`
 
-也可以直接手动指定 Qt 路径：
+## 项目结构
 
-```powershell
-cmake -S . -B build -DCMAKE_PREFIX_PATH="D:/QT/QT5.14/5.14.2/msvc2017_64"
-cmake --build build --config Debug
+```
+Gg/
+├── include/Gg/     # 头文件
+├── src/           # 源文件
+├── cmake/         # CMake 模块
+└── build/        # 构建输出
 ```
 
-## 输出目录
+## 技术栈
 
-- Debug 可执行文件默认位于 `build/Debug/Debug/Gg.exe`
-- Release 可执行文件默认位于 `build/Release/Release/Gg.exe`
-
-## 说明
-
-- 项目已启用 `CMAKE_AUTOMOC`
-- 项目已启用 `CMAKE_AUTOUIC`
-- 项目已启用 `CMAKE_AUTORCC`
-
-因此 `Gg.h`、`Gg.ui`、`Gg.qrc` 等 Qt 相关文件会由 CMake 自动处理，无需再维护旧的 Visual Studio Qt 工程文件。
+- C++23
+- Qt Widgets
+- Windows API (Raw Input)
