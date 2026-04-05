@@ -33,19 +33,20 @@ bool WinRawInputMouseSource::start(quintptr targetWindowId, QString* error)
     stop();
     if (targetWindowId == 0) {
         if (error) {
-            *error = uiText("The target window is invalid.", "目标窗口无效");
+            *error = QCoreApplication::translate("WinRawInputMouseSource", "The target window is invalid.");
         }
         return false;
     }
 
     RAWINPUTDEVICE rawInputDevice;
+    // 以 HID Generic Desktop/Mouse 注册原始输入，并允许窗口在后台继续接收事件。
     rawInputDevice.usUsagePage = 0x01;
     rawInputDevice.usUsage = 0x02;
     rawInputDevice.dwFlags = RIDEV_INPUTSINK;
     rawInputDevice.hwndTarget = reinterpret_cast<HWND>(targetWindowId);
     if (!RegisterRawInputDevices(&rawInputDevice, 1, sizeof(RAWINPUTDEVICE))) {
         if (error) {
-            *error = uiText("Failed to register raw input.", "注册原始输入失败");
+            *error = QCoreApplication::translate("WinRawInputMouseSource", "Failed to register raw input.");
         }
         return false;
     }
@@ -82,6 +83,7 @@ bool WinRawInputMouseSource::nativeEventFilter(const QByteArray& eventType, void
 bool WinRawInputMouseSource::nativeEventFilter(const QByteArray& eventType, void* message, long* result)
 #endif
 {
+    // 只处理目标窗口的 WM_INPUT，其他原生消息继续交给 Qt。
     Q_UNUSED(result);
     if (!m_running || eventType != "windows_generic_MSG") {
         return false;
@@ -101,6 +103,7 @@ void WinRawInputMouseSource::handleRawInput(void* lParam)
     HRAWINPUT rawInputHandle = reinterpret_cast<HRAWINPUT>(lParam);
 
     UINT size = 0;
+    // 先查询缓冲区大小，再读取完整的 RAWINPUT 数据。
     GetRawInputData(rawInputHandle, RID_INPUT, nullptr, &size, sizeof(RAWINPUTHEADER));
     if (size == 0) {
         return;
@@ -118,6 +121,7 @@ void WinRawInputMouseSource::handleRawInput(void* lParam)
 
     const RAWMOUSE& mouse = raw->data.mouse;
     const USHORT flags = mouse.usButtonFlags;
+    // 过滤掉既没有位移也没有按键或滚轮变化的空事件。
     const bool hasMovement = mouse.lLastX != 0 || mouse.lLastY != 0 || (mouse.usFlags & MOUSE_MOVE_ABSOLUTE) != 0;
     if (!hasMovement && flags == 0) {
         return;
@@ -140,6 +144,7 @@ void WinRawInputMouseSource::handleRawInput(void* lParam)
     }
 
     const quintptr deviceKey = reinterpret_cast<quintptr>(raw->header.hDevice);
+    // 设备信息解析代价较高，因此按原始设备句柄做缓存。
     if (!m_deviceCache.contains(deviceKey)) {
         m_deviceCache.insert(deviceKey, resolveDeviceInfo(raw->header.hDevice));
     }

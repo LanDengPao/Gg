@@ -6,6 +6,7 @@
 #include <QThread>
 #include <QSemaphore>
 
+// 在独立的 QThread 上执行调用方提供的 lambda。
 class LambdaThread : public QObject
 {
 private:

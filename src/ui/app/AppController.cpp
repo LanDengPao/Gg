@@ -57,18 +57,19 @@ bool AppController::startTest(TestMode mode, QString* error)
 {
     if (m_isRecording) {
         if (error) {
-            *error = uiText("A test is already being recorded.", "当前已经有一个测试在录制中");
+            *error = tr("A test is already being recorded.");
         }
         return false;
     }
     if (m_currentDevice.deviceId.isEmpty()) {
         if (error) {
-            *error = uiText("No usable mouse device is currently detected.", "当前未识别到可用鼠标设备");
+            *error = tr("No usable mouse device is currently detected.");
         }
         return false;
     }
 
     m_currentSession = {};
+    // 每次测试使用独立会话目录，避免覆盖历史结果。
     m_currentSession.sessionId = QUuid::createUuid().toString(QUuid::WithoutBraces);
     m_currentSession.sessionDir = m_repository.sessionDirectory(m_currentSession.sessionId);
     m_currentSession.mode = mode;
@@ -77,7 +78,7 @@ bool AppController::startTest(TestMode mode, QString* error)
 
     if (!QDir().mkpath(m_currentSession.sessionDir)) {
         if (error) {
-            *error = uiText("Failed to create the test directory.", "无法创建测试目录");
+            *error = tr("Failed to create the test directory.");
         }
         return false;
     }
@@ -118,6 +119,7 @@ bool AppController::stopTest(QString* error)
     m_currentSession.summary = summary;
 
     bool saveOk = true;
+    // 元数据和汇总结果分开落盘，任一失败都将本次会话标记为错误。
     if (!m_repository.saveSessionRecord(m_currentSession, error)) {
         m_currentSession.status = SessionStatus::Error;
         saveOk = false;

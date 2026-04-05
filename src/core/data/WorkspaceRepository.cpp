@@ -14,6 +14,7 @@
 namespace {
 constexpr quint32 kSampleMagic = 0x47475331;
 constexpr quint16 kSampleVersion = 1;
+// samples.bin 使用固定魔数和版本号，便于校验文件合法性以及后续格式升级。
 }
 
 WorkspaceRepository::WorkspaceRepository()
@@ -33,14 +34,14 @@ bool WorkspaceRepository::ensureWorkspace(QString* error) const
     QDir dir(m_rootPath);
     if (!dir.exists() && !QDir().mkpath(m_rootPath)) {
         if (error) {
-            *error = uiText("Failed to create workspace: %1", "无法创建工作目录：%1").arg(m_rootPath);
+            *error = QCoreApplication::translate("WorkspaceRepository", "Failed to create workspace: %1").arg(m_rootPath);
         }
         return false;
     }
 
     if (!dir.exists(QStringLiteral("sessions")) && !dir.mkpath(QStringLiteral("sessions"))) {
         if (error) {
-            *error = uiText("Failed to create the sessions directory.", "无法创建 sessions 目录");
+            *error = QCoreApplication::translate("WorkspaceRepository", "Failed to create the sessions directory.");
         }
         return false;
     }
@@ -74,7 +75,7 @@ bool WorkspaceRepository::saveSessionRecord(const SessionRecord& record, QString
     }
     if (!QDir().mkpath(record.sessionDir)) {
         if (error) {
-            *error = uiText("Failed to create session directory: %1", "无法创建会话目录：%1").arg(record.sessionDir);
+            *error = QCoreApplication::translate("WorkspaceRepository", "Failed to create session directory: %1").arg(record.sessionDir);
         }
         return false;
     }
@@ -88,7 +89,7 @@ bool WorkspaceRepository::saveSessionSummary(const SessionSummary& summary, QStr
     }
     if (!QDir().mkpath(sessionDirectory(summary.sessionId))) {
         if (error) {
-            *error = uiText("Failed to create session directory: %1", "无法创建会话目录：%1").arg(summary.sessionId);
+            *error = QCoreApplication::translate("WorkspaceRepository", "Failed to create session directory: %1").arg(summary.sessionId);
         }
         return false;
     }
@@ -130,23 +131,25 @@ QVector<MouseSample> WorkspaceRepository::loadSamples(const QString& sessionId, 
     QFile file(sessionSamplesPath(sessionId));
     if (!file.open(QIODevice::ReadOnly)) {
         if (error) {
-            *error = uiText("Failed to open sample file: %1", "无法打开采样文件：%1").arg(file.fileName());
+            *error = QCoreApplication::translate("WorkspaceRepository", "Failed to open sample file: %1").arg(file.fileName());
         }
         return samples;
     }
 
     QDataStream in(&file);
     in.setByteOrder(QDataStream::LittleEndian);
+    // 先校验文件头，再按约定的二进制布局读取采样数据。
     quint32 magic = 0;
     quint16 version = 0;
     in >> magic >> version;
     if (magic != kSampleMagic || version != kSampleVersion) {
         if (error) {
-            *error = uiText("The sample file format is invalid.", "采样文件格式不正确");
+            *error = QCoreApplication::translate("WorkspaceRepository", "The sample file format is invalid.");
         }
         return samples;
     }
 
+    // 按写入顺序逐条回放采样记录，直到流结束或遇到损坏数据。
     while (!in.atEnd()) {
         MouseSample sample;
         qint32 x = 0;
@@ -185,7 +188,7 @@ bool WorkspaceRepository::exportSamples(const QString& sessionId, const QString&
         QSaveFile file(filePath);
         if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
             if (error) {
-                *error = uiText("Failed to write export file: %1", "无法写入导出文件：%1").arg(filePath);
+                *error = QCoreApplication::translate("WorkspaceRepository", "Failed to write export file: %1").arg(filePath);
             }
             return false;
         }
@@ -211,14 +214,14 @@ bool WorkspaceRepository::writeJsonFile(const QString& path, const QJsonObject& 
     QSaveFile file(path);
     if (!file.open(QIODevice::WriteOnly)) {
         if (error) {
-            *error = uiText("Failed to write JSON file: %1", "无法写入 JSON 文件：%1").arg(path);
+            *error = QCoreApplication::translate("WorkspaceRepository", "Failed to write JSON file: %1").arg(path);
         }
         return false;
     }
     file.write(QJsonDocument(obj).toJson(QJsonDocument::Indented));
     if (!file.commit()) {
         if (error) {
-            *error = uiText("Failed to commit JSON file: %1", "提交 JSON 文件失败：%1").arg(path);
+            *error = QCoreApplication::translate("WorkspaceRepository", "Failed to commit JSON file: %1").arg(path);
         }
         return false;
     }

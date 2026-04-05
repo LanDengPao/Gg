@@ -5,18 +5,26 @@
 #include <QQueue>
 #include <QVector>
 
+// 汇总实时鼠标输入，生成仪表盘指标和可持久化的测试汇总。
 class MetricsEngine
 {
 public:
     MetricsEngine();
 
+    // 按指定测试模式开始或结束一次录制会话。
     void setSessionState(bool active, TestMode mode);
+    // 记录主窗口是否处于激活状态，用于反映后台录制状态。
     void setUiActive(bool active);
+    // 更新实时快照中展示的最新设备信息。
     void updateDevice(const DeviceInfo& device);
+    // 将一条原始鼠标采样纳入滚动指标和会话统计。
     void ingestSample(const MouseSample& sample);
+    // 清空当前会话的累计统计，但保留实时监控状态。
     void resetSession();
 
+    // 返回仪表盘使用的最新实时快照。
     LiveSnapshot snapshot() const;
+    // 基于当前累计的录制状态生成一份已完成的会话汇总。
     SessionSummary buildSessionSummary(const QString& sessionId,
                                        TestMode mode,
                                        const QDateTime& startUtc,

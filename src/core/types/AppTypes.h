@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QCoreApplication>
 #include <QDateTime>
 #include <QJsonArray>
 #include <QJsonObject>
@@ -8,18 +9,14 @@
 #include <QtGlobal>
 #include <QVector>
 
+// 定义当前运行的鼠标测试类型。
 enum class TestMode
 {
     PollingRate,
     TrajectoryStability
 };
 
-enum class UiLanguage
-{
-    English,
-    Chinese
-};
-
+// 表示实时监控和持久化会话的生命周期状态。
 enum class SessionStatus
 {
     Idle,
@@ -29,6 +26,7 @@ enum class SessionStatus
     Error
 };
 
+// 描述当前活跃输入设备的基本信息。
 struct DeviceInfo
 {
     QString deviceId;
@@ -45,6 +43,7 @@ struct DeviceInfo
     QDateTime lastSeenUtc;
 };
 
+// 表示从操作系统采集到的一条原始鼠标事件。
 struct MouseSample
 {
     qint64 timestampUs = 0;
@@ -55,6 +54,7 @@ struct MouseSample
     quint8 eventType = 0;
 };
 
+// 保存一次录制完成后计算得到的聚合指标。
 struct SessionSummary
 {
     QString sessionId;
@@ -81,6 +81,7 @@ struct SessionSummary
     DeviceInfo device;
 };
 
+// 保存一个测试会话目录对应的持久化元数据。
 struct SessionRecord
 {
     QString sessionId;
@@ -94,6 +95,7 @@ struct SessionRecord
     SessionSummary summary;
 };
 
+// 保存监控或录制期间仪表盘展示的实时状态。
 struct LiveSnapshot
 {
     SessionStatus runStatus = SessionStatus::Monitoring;
@@ -124,34 +126,14 @@ struct LiveSnapshot
     QVector<QPointF> trajectory;
 };
 
-inline UiLanguage& appUiLanguageStorage()
-{
-    static UiLanguage language = UiLanguage::English;
-    return language;
-}
-
-inline UiLanguage appUiLanguage()
-{
-    return appUiLanguageStorage();
-}
-
-inline void setAppUiLanguage(UiLanguage language)
-{
-    appUiLanguageStorage() = language;
-}
-
-inline QString uiText(const char* english, const char* chinese)
-{
-    return appUiLanguage() == UiLanguage::Chinese ? QString::fromUtf8(chinese)
-                                                  : QString::fromUtf8(english);
-}
-
+// 返回测试模式对应的稳定存储键。
 inline QString testModeKey(TestMode mode)
 {
     return mode == TestMode::PollingRate ? QStringLiteral("polling_rate")
                                          : QStringLiteral("trajectory_stability");
 }
 
+// 返回会话状态对应的稳定存储键。
 inline QString sessionStatusKey(SessionStatus status)
 {
     switch (status) {
@@ -169,6 +151,7 @@ inline QString sessionStatusKey(SessionStatus status)
     return QStringLiteral("unknown");
 }
 
+// 将历史版本和当前版本的持久化字符串解析为测试模式。
 inline TestMode testModeFromStoredString(const QString& value)
 {
     if (value == QStringLiteral("trajectory_stability")
@@ -179,6 +162,7 @@ inline TestMode testModeFromStoredString(const QString& value)
     return TestMode::PollingRate;
 }
 
+// 将历史版本和当前版本的持久化字符串解析为会话状态。
 inline SessionStatus sessionStatusFromStoredString(const QString& value)
 {
     if (value == QStringLiteral("idle")
@@ -209,74 +193,45 @@ inline SessionStatus sessionStatusFromStoredString(const QString& value)
     return SessionStatus::Monitoring;
 }
 
-inline QString testModeToDisplayString(TestMode mode, UiLanguage language = appUiLanguage())
+// 返回测试模式对应的本地化展示文本。
+inline QString testModeToDisplayString(TestMode mode)
 {
-    if (language == UiLanguage::Chinese) {
-        return mode == TestMode::PollingRate ? QStringLiteral("轮询率测试")
-                                             : QStringLiteral("轨迹/稳定性测试");
-    }
-    return mode == TestMode::PollingRate ? QStringLiteral("Polling Rate")
-                                         : QStringLiteral("Trajectory Stability");
+    return mode == TestMode::PollingRate
+        ? QCoreApplication::translate("AppTypes", "Polling Rate")
+        : QCoreApplication::translate("AppTypes", "Trajectory Stability");
 }
 
-inline QString sessionStatusToDisplayString(SessionStatus status, UiLanguage language = appUiLanguage())
+// 返回会话状态对应的本地化展示文本。
+inline QString sessionStatusToDisplayString(SessionStatus status)
 {
-    if (language == UiLanguage::Chinese) {
-        switch (status) {
-        case SessionStatus::Idle:
-            return QStringLiteral("空闲");
-        case SessionStatus::Monitoring:
-            return QStringLiteral("实时监控");
-        case SessionStatus::Recording:
-            return QStringLiteral("测试录制中");
-        case SessionStatus::Completed:
-            return QStringLiteral("已完成");
-        case SessionStatus::Error:
-            return QStringLiteral("异常");
-        }
-        return QStringLiteral("未知");
-    }
-
     switch (status) {
     case SessionStatus::Idle:
-        return QStringLiteral("Idle");
+        return QCoreApplication::translate("AppTypes", "Idle");
     case SessionStatus::Monitoring:
-        return QStringLiteral("Monitoring");
+        return QCoreApplication::translate("AppTypes", "Monitoring");
     case SessionStatus::Recording:
-        return QStringLiteral("Recording");
+        return QCoreApplication::translate("AppTypes", "Recording");
     case SessionStatus::Completed:
-        return QStringLiteral("Completed");
+        return QCoreApplication::translate("AppTypes", "Completed");
     case SessionStatus::Error:
-        return QStringLiteral("Error");
+        return QCoreApplication::translate("AppTypes", "Error");
     }
-    return QStringLiteral("Unknown");
+    return QCoreApplication::translate("AppTypes", "Unknown");
 }
 
-inline QString scoreLevelText(double score, UiLanguage language = appUiLanguage())
+// 将数值得分映射为本地化的等级文本。
+inline QString scoreLevelText(double score)
 {
-    if (language == UiLanguage::Chinese) {
-        if (score >= 90.0) {
-            return QStringLiteral("优秀");
-        }
-        if (score >= 75.0) {
-            return QStringLiteral("良好");
-        }
-        if (score >= 60.0) {
-            return QStringLiteral("一般");
-        }
-        return QStringLiteral("较差");
-    }
-
     if (score >= 90.0) {
-        return QStringLiteral("Excellent");
+        return QCoreApplication::translate("AppTypes", "Excellent");
     }
     if (score >= 75.0) {
-        return QStringLiteral("Good");
+        return QCoreApplication::translate("AppTypes", "Good");
     }
     if (score >= 60.0) {
-        return QStringLiteral("Fair");
+        return QCoreApplication::translate("AppTypes", "Fair");
     }
-    return QStringLiteral("Poor");
+    return QCoreApplication::translate("AppTypes", "Poor");
 }
 
 inline QJsonObject toJson(const DeviceInfo& device)

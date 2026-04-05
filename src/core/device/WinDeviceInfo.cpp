@@ -13,6 +13,7 @@
 #include <QString>
 
 namespace {
+// 统一不同 Win32 API 返回的设备路径格式，便于后续比较。
 QString normalizeDevicePath(QString path)
 {
     path = path.trimmed();
@@ -22,6 +23,7 @@ QString normalizeDevicePath(QString path)
     return path.toLower();
 }
 
+// 从设备路径中提取 VID/PID 组合键，用作模糊匹配兜底。
 QString extractVidPidKey(const QString& path)
 {
     const QString upperPath = path.toUpper();
@@ -109,6 +111,7 @@ bool populateFriendlyMouseName(const QString& rawDevicePath, DeviceInfo& info)
         const QString devicePath = QString::fromWCharArray(detailData->DevicePath);
         const QString normalizedDevicePath = normalizeDevicePath(devicePath);
         const QString deviceVidPidKey = extractVidPidKey(devicePath);
+        // Raw Input 路径和 SetupAPI 路径不一定完全一致，因此同时用完整路径和 VID/PID 做兜底匹配。
         const bool pathMatched = normalizedDevicePath == normalizedRawPath;
         const bool vidPidMatched = !rawVidPidKey.isEmpty() && rawVidPidKey == deviceVidPidKey;
         if (!pathMatched && !vidPidMatched) {

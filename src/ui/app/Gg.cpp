@@ -6,12 +6,15 @@
 #include <QAbstractItemView>
 #include <QApplication>
 #include <QChar>
+#include <QCoreApplication>
 #include <QDateTime>
+#include <QDir>
 #include <QFile>
 #include <QFileDialog>
 #include <QHeaderView>
 #include <QLabel>
 #include <QListWidget>
+#include <QLocale>
 #include <QMessageBox>
 #include <QShowEvent>
 #include <QSizePolicy>
@@ -65,11 +68,16 @@ QString formatDuration(qint64 ms)
     return QStringLiteral("0:%1").arg(remainingSeconds, 2, 10, QChar('0'));
 }
 
-QString deviceConnectionText(const DeviceInfo& device, UiLanguage language)
+QString deviceConnectionText(const DeviceInfo& device)
 {
     return device.connected
-        ? (language == UiLanguage::Chinese ? QStringLiteral("已连接") : QStringLiteral("Connected"))
-        : (language == UiLanguage::Chinese ? QStringLiteral("未连接") : QStringLiteral("Disconnected"));
+        ? QCoreApplication::translate("Gg", "Connected")
+        : QCoreApplication::translate("Gg", "Disconnected");
+}
+
+QString chineseTranslationFilePath()
+{
+    return QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("translations/Gg_zh_CN.qm"));
 }
 
 void setListItemText(QListWidget* list, int row, const QString& text)
@@ -101,7 +109,6 @@ Gg::Gg(QWidget* parent)
     : QMainWindow(parent)
     , m_ui(std::make_unique<Ui::Gg>())
 {
-    setAppUiLanguage(m_uiLanguage);
     m_ui->setupUi(this);
 
     m_controller = new AppController(this);
@@ -143,6 +150,7 @@ void Gg::initializeUi()
     m_ui->navigationList->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_ui->navigationList->setSelectionMode(QAbstractItemView::SingleSelection);
     m_ui->navigationList->setSpacing(4);
+    m_ui->navigationList->setFocusPolicy(Qt::NoFocus);
     if (m_ui->navigationList->count() == 0) {
         for (int i = 0; i < 5; ++i) {
             m_ui->navigationList->addItem(QString());
@@ -191,7 +199,12 @@ void Gg::initializeUi()
     connect(m_ui->actionChinese, &QAction::triggered, this, &Gg::onSwitchToChinese);
 
     m_ui->navigationList->setCurrentRow(0);
-    retranslateUi();
+    // 首次启动时根据系统区域设置选择默认界面语言。
+    if (QLocale::system().name().startsWith(QStringLiteral("zh"), Qt::CaseInsensitive)) {
+        activateChineseTranslation();
+    } else {
+        activateEnglishTranslation();
+    }
 }
 
 void Gg::registerStatusBar()
@@ -246,14 +259,32 @@ void Gg::updateStatusTone(bool recording)
     updateWidgetStyle(m_statusLabel);
 }
 
-void Gg::setLanguage(UiLanguage language)
+bool Gg::activateChineseTranslation()
 {
-    if (m_uiLanguage == language) {
-        return;
+    // 先移除旧翻译器，避免重复安装造成翻译结果混杂。
+    qApp->removeTranslator(&m_translator);
+    if (!m_translator.load(chineseTranslationFilePath())) {
+        m_isChineseTranslationActive = false;
+        retranslateUi();
+        refreshAll();
+        refreshHistory();
+        refreshCompare();
+        return false;
     }
 
-    m_uiLanguage = language;
-    setAppUiLanguage(language);
+    qApp->installTranslator(&m_translator);
+    m_isChineseTranslationActive = true;
+    retranslateUi();
+    refreshAll();
+    refreshHistory();
+    refreshCompare();
+    return true;
+}
+
+void Gg::activateEnglishTranslation()
+{
+    qApp->removeTranslator(&m_translator);
+    m_isChineseTranslationActive = false;
     retranslateUi();
     refreshAll();
     refreshHistory();
@@ -264,102 +295,102 @@ void Gg::retranslateUi()
 {
     m_ui->retranslateUi(this);
 
-    setWindowTitle(uiText("Mouse Data", "鼠标数据"));
+    setWindowTitle(tr("Mouse Data"));
 
-    setListItemText(m_ui->navigationList, 0, uiText("Dashboard", "首页"));
-    setListItemText(m_ui->navigationList, 1, uiText("Test", "测试"));
-    setListItemText(m_ui->navigationList, 2, uiText("History", "历史"));
-    setListItemText(m_ui->navigationList, 3, uiText("Compare", "对比"));
-    setListItemText(m_ui->navigationList, 4, uiText("Device", "设备"));
+    setListItemText(m_ui->navigationList, 0, tr("Dashboard"));
+    setListItemText(m_ui->navigationList, 1, tr("Test"));
+    setListItemText(m_ui->navigationList, 2, tr("History"));
+    setListItemText(m_ui->navigationList, 3, tr("Compare"));
+    setListItemText(m_ui->navigationList, 4, tr("Device"));
 
-    m_ui->menuLanguage->setTitle(uiText("Language", "语言"));
+    m_ui->menuLanguage->setTitle(tr("Language"));
     m_ui->actionEnglish->setText(QStringLiteral("English"));
-    m_ui->actionEnglish->setChecked(m_uiLanguage == UiLanguage::English);
+    m_ui->actionEnglish->setChecked(!m_isChineseTranslationActive);
     m_ui->actionChinese->setText(QStringLiteral("中文"));
-    m_ui->actionChinese->setChecked(m_uiLanguage == UiLanguage::Chinese);
+    m_ui->actionChinese->setChecked(m_isChineseTranslationActive);
 
-    if (m_statusLabel) m_statusLabel->setText(uiText("Idle", "空闲"));
-    if (m_modeLabel) m_modeLabel->setText(uiText("Monitoring", "实时监控"));
-    if (m_deviceLabel) m_deviceLabel->setText(uiText("No Device", "无设备"));
+    if (m_statusLabel) m_statusLabel->setText(tr("Idle"));
+    if (m_modeLabel) m_modeLabel->setText(tr("Monitoring"));
+    if (m_deviceLabel) m_deviceLabel->setText(tr("No Device"));
     if (m_workspaceLabel) {
-        m_workspaceLabel->setText(uiText("Workspace: %1", "工作区: %1").arg(m_controller->workspacePath()));
+        m_workspaceLabel->setText(tr("Workspace: %1").arg(m_controller->workspacePath()));
     }
 
-    m_ui->lastSessionTitleLabel->setText(uiText("Last Session", "最近一次测试"));
-    m_ui->lastSessionLabel->setText(uiText("No Records", "暂无记录"));
-    m_ui->lastSessionDetailsButton->setText(uiText("Details", "详情"));
-    m_ui->lastSessionCompareButton->setText(uiText("Compare", "对比"));
+    m_ui->lastSessionTitleLabel->setText(tr("Last Session"));
+    m_ui->lastSessionLabel->setText(tr("No Records"));
+    m_ui->lastSessionDetailsButton->setText(tr("Details"));
+    m_ui->lastSessionCompareButton->setText(tr("Compare"));
 
-    m_ui->currentDeviceTitleLabel->setText(uiText("Current Device", "当前设备"));
-    m_ui->deviceInfoLabel->setText(uiText("No Mouse", "未检测到鼠标"));
-    m_ui->deviceMoreButton->setText(uiText("More", "更多"));
+    m_ui->currentDeviceTitleLabel->setText(tr("Current Device"));
+    m_ui->deviceInfoLabel->setText(tr("No Mouse"));
+    m_ui->deviceMoreButton->setText(tr("More"));
 
-    m_ui->dashboardHzTitleLabel->setText(uiText("Current Hz", "当前 Hz"));
-    m_ui->dashboardAvgTitleLabel->setText(uiText("1s Avg", "1 秒平均"));
-    m_ui->dashboardStdTitleLabel->setText(uiText("Std Dev", "标准差"));
-    m_ui->dashboardSpeedTitleLabel->setText(uiText("Speed", "速度"));
-    m_ui->dashboardJitterTitleLabel->setText(uiText("Jitter", "抖动"));
-    m_ui->dashboardClicksTitleLabel->setText(uiText("Clicks", "点击"));
+    m_ui->dashboardHzTitleLabel->setText(tr("Current Hz"));
+    m_ui->dashboardAvgTitleLabel->setText(tr("1s Avg"));
+    m_ui->dashboardStdTitleLabel->setText(tr("Std Dev"));
+    m_ui->dashboardSpeedTitleLabel->setText(tr("Speed"));
+    m_ui->dashboardJitterTitleLabel->setText(tr("Jitter"));
+    m_ui->dashboardClicksTitleLabel->setText(tr("Clicks"));
     m_ui->dashboardHzUnitLabel->setText(QStringLiteral("Hz"));
     m_ui->dashboardAvgUnitLabel->setText(QStringLiteral("Hz"));
     m_ui->dashboardStdUnitLabel->setText(QStringLiteral("Hz"));
     m_ui->dashboardSpeedUnitLabel->setText(QStringLiteral("px/s"));
     m_ui->dashboardJitterUnitLabel->setText(QStringLiteral("px"));
     m_ui->dashboardClicksUnitLabel->setText(QString());
-    m_ui->dashboardChartTitleLabel->setText(uiText("Polling Chart", "轮询曲线"));
-    m_ui->dashboardTrajectoryTitleLabel->setText(uiText("Trajectory", "轨迹"));
+    m_ui->dashboardChartTitleLabel->setText(tr("Polling Chart"));
+    m_ui->dashboardTrajectoryTitleLabel->setText(tr("Trajectory"));
 
-    m_ui->testModeGroup->setTitle(uiText("Test Mode", "测试模式"));
-    m_ui->testModeCombo->setItemText(0, uiText("Polling Rate", "轮询率测试"));
-    m_ui->testModeCombo->setItemText(1, uiText("Trajectory Stability", "轨迹稳定性测试"));
-    m_ui->controlGroup->setTitle(uiText("Control", "控制"));
-    m_ui->startButton->setText(uiText("Start", "开始"));
-    m_ui->stopButton->setText(uiText("Stop", "停止"));
-    m_ui->testStateLabel->setText(uiText("Status: Idle", "状态: 空闲"));
-    m_ui->metricsGroup->setTitle(uiText("Metrics", "指标"));
-    m_ui->testResultLabel->setText(uiText("Start a test to collect data.", "开始测试后显示结果。"));
-    m_ui->chartGroup->setTitle(uiText("Chart", "图表"));
+    m_ui->testModeGroup->setTitle(tr("Test Mode"));
+    m_ui->testModeCombo->setItemText(0, testModeToDisplayString(TestMode::PollingRate));
+    m_ui->testModeCombo->setItemText(1, testModeToDisplayString(TestMode::TrajectoryStability));
+    m_ui->controlGroup->setTitle(tr("Control"));
+    m_ui->startButton->setText(tr("Start"));
+    m_ui->stopButton->setText(tr("Stop"));
+    m_ui->testStateLabel->setText(tr("Status: Idle"));
+    m_ui->metricsGroup->setTitle(tr("Metrics"));
+    m_ui->testResultLabel->setText(tr("Start a test to collect data."));
+    m_ui->chartGroup->setTitle(tr("Chart"));
 
-    m_ui->historyTitleLabel->setText(uiText("History", "历史记录"));
-    m_ui->historyExportButton->setText(uiText("Export", "导出"));
-    m_ui->historyCompareButton->setText(uiText("Compare", "对比"));
-    m_ui->historyRefreshButton->setText(uiText("Refresh", "刷新"));
+    m_ui->historyTitleLabel->setText(tr("History"));
+    m_ui->historyExportButton->setText(tr("Export"));
+    m_ui->historyCompareButton->setText(tr("Compare"));
+    m_ui->historyRefreshButton->setText(tr("Refresh"));
     m_ui->historyTable->setHorizontalHeaderLabels({
-        uiText("Time", "时间"),
-        uiText("Mode", "模式"),
-        uiText("Device", "设备"),
-        uiText("Duration", "时长"),
-        uiText("Avg Hz", "平均 Hz"),
-        uiText("Stability", "稳定度"),
-        uiText("Jitter", "抖动"),
-        uiText("Action", "操作")
+        tr("Time"),
+        tr("Mode"),
+        tr("Device"),
+        tr("Duration"),
+        tr("Avg Hz"),
+        tr("Stability"),
+        tr("Jitter"),
+        tr("Action")
     });
 
-    m_ui->compareTitleLabel->setText(uiText("Compare", "对比"));
-    m_ui->compareSelectionLabel->setText(uiText("Selected 0", "已选择 0"));
-    m_ui->compareAddButton->setText(uiText("Add", "添加"));
-    m_ui->compareClearButton->setText(uiText("Clear", "清空"));
+    m_ui->compareTitleLabel->setText(tr("Compare"));
+    m_ui->compareSelectionLabel->setText(tr("Selected %1").arg(0));
+    m_ui->compareAddButton->setText(tr("Add"));
+    m_ui->compareClearButton->setText(tr("Clear"));
     m_ui->compareTable->setHorizontalHeaderLabels({
-        uiText("Time", "时间"),
-        uiText("Mode", "模式"),
-        uiText("Device", "设备"),
-        uiText("Avg Hz", "平均 Hz"),
-        uiText("Max Hz", "最大 Hz"),
-        uiText("Min Hz", "最小 Hz"),
-        uiText("Std Dev", "标准差"),
-        uiText("Stability", "稳定度"),
-        uiText("Jitter", "抖动")
+        tr("Time"),
+        tr("Mode"),
+        tr("Device"),
+        tr("Avg Hz"),
+        tr("Max Hz"),
+        tr("Min Hz"),
+        tr("Std Dev"),
+        tr("Stability"),
+        tr("Jitter")
     });
 
-    m_ui->deviceTitleLabel->setText(uiText("Device", "设备"));
-    m_ui->deviceBasicGroup->setTitle(uiText("Basic", "基础信息"));
-    m_ui->deviceStatusGroup->setTitle(uiText("Status", "状态"));
-    m_ui->deviceNameFieldLabel->setText(uiText("Name:", "名称:"));
-    m_ui->deviceVendorFieldLabel->setText(uiText("Vendor:", "厂商:"));
+    m_ui->deviceTitleLabel->setText(tr("Device"));
+    m_ui->deviceBasicGroup->setTitle(tr("Basic"));
+    m_ui->deviceStatusGroup->setTitle(tr("Status"));
+    m_ui->deviceNameFieldLabel->setText(tr("Name:"));
+    m_ui->deviceVendorFieldLabel->setText(tr("Vendor:"));
     m_ui->deviceVidFieldLabel->setText(QStringLiteral("VID:"));
     m_ui->devicePidFieldLabel->setText(QStringLiteral("PID:"));
-    m_ui->deviceConnectionFieldLabel->setText(uiText("Connection:", "连接:"));
-    m_ui->deviceTypeFieldLabel->setText(uiText("Type:", "类型:"));
+    m_ui->deviceConnectionFieldLabel->setText(tr("Connection:"));
+    m_ui->deviceTypeFieldLabel->setText(tr("Type:"));
 }
 
 void Gg::refreshAll()
@@ -371,12 +402,12 @@ void Gg::refreshAll()
     const LiveSnapshot snap = m_controller->snapshot();
     const SessionRecord last = m_controller->lastSession();
 
-    m_statusLabel->setText(sessionStatusToDisplayString(snap.runStatus, m_uiLanguage));
-    m_modeLabel->setText(testModeToDisplayString(snap.currentMode, m_uiLanguage));
+    m_statusLabel->setText(sessionStatusToDisplayString(snap.runStatus));
+    m_modeLabel->setText(testModeToDisplayString(snap.currentMode));
     updateStatusTone(snap.recording);
 
-    m_deviceLabel->setText(snap.device.displayName.isEmpty() ? uiText("No Device", "无设备") : snap.device.displayName);
-    m_backgroundLabel->setText((snap.recording && !snap.uiActive) ? uiText("Recording in Background", "后台录制中") : QString());
+    m_deviceLabel->setText(snap.device.displayName.isEmpty() ? tr("No Device") : snap.device.displayName);
+    m_backgroundLabel->setText((snap.recording && !snap.uiActive) ? tr("Recording in Background") : QString());
 
     m_ui->dashboardHzValueLabel->setText(formatHz(snap.currentHz));
     m_ui->dashboardAvgValueLabel->setText(formatHz(snap.avgHz1s));
@@ -391,13 +422,13 @@ void Gg::refreshAll()
     if (!last.sessionId.isEmpty()) {
         m_ui->lastSessionLabel->setText(QStringLiteral("%1 | %2 | %3 %4 Hz | %5 %6")
                                             .arg(last.startTimeUtc.toString(QStringLiteral("yyyy-MM-dd HH:mm")))
-                                            .arg(testModeToDisplayString(last.mode, m_uiLanguage))
-                                            .arg(uiText("Avg", "平均"))
+                                            .arg(testModeToDisplayString(last.mode))
+                                            .arg(tr("Avg"))
                                             .arg(last.summary.avgHz, 0, 'f', 0)
-                                            .arg(uiText("Score", "评分"))
+                                            .arg(tr("Score"))
                                             .arg(formatScore(last.summary.stabilityScore)));
     } else {
-        m_ui->lastSessionLabel->setText(uiText("No Records", "暂无记录"));
+        m_ui->lastSessionLabel->setText(tr("No Records"));
     }
 
     if (!snap.device.deviceId.isEmpty()) {
@@ -406,7 +437,7 @@ void Gg::refreshAll()
                                            .arg(snap.device.vendorId)
                                            .arg(snap.device.productId));
     } else {
-        m_ui->deviceInfoLabel->setText(uiText("No Mouse", "未检测到鼠标"));
+        m_ui->deviceInfoLabel->setText(tr("No Mouse"));
     }
 
     const QString vendorText = !snap.device.manufacturer.isEmpty()
@@ -417,7 +448,7 @@ void Gg::refreshAll()
     m_ui->deviceVendorValueLabel->setText(vendorText);
     m_ui->deviceVidValueLabel->setText(snap.device.vendorId.isEmpty() ? QStringLiteral("-") : snap.device.vendorId);
     m_ui->devicePidValueLabel->setText(snap.device.productId.isEmpty() ? QStringLiteral("-") : snap.device.productId);
-    m_ui->deviceConnectedValueLabel->setText(deviceConnectionText(snap.device, m_uiLanguage));
+    m_ui->deviceConnectedValueLabel->setText(deviceConnectionText(snap.device));
     m_ui->deviceTypeValueLabel->setText(snap.device.connectionType.isEmpty() ? QStringLiteral("-") : snap.device.connectionType);
 
     const bool isRecording = snap.recording;
@@ -425,39 +456,40 @@ void Gg::refreshAll()
     m_ui->stopButton->setEnabled(isRecording);
 
     if (isRecording) {
-        m_ui->testStateLabel->setText(uiText("Status: Recording", "状态: 录制中"));
+        m_ui->testStateLabel->setText(tr("Status: Recording"));
 
         const qint64 elapsed = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch() - snap.recordingStartMs;
         m_ui->testMetricsLabel->setText(QStringLiteral("%1: %2 | %3: %4 | %5: %6")
-                                            .arg(uiText("Current", "当前"))
+                                            .arg(tr("Current"))
                                             .arg(formatHz(snap.currentHz))
-                                            .arg(uiText("Avg", "平均"))
+                                            .arg(tr("Avg"))
                                             .arg(formatHz(snap.avgHz30s))
-                                            .arg(uiText("Time", "时间"))
+                                            .arg(tr("Time"))
                                             .arg(formatDuration(elapsed)));
         m_ui->testChart->setValues(snap.pollingHistory);
         m_ui->testTrajectory->setPoints(snap.trajectory);
         return;
     }
 
-    m_ui->testStateLabel->setText(uiText("Status: Idle", "状态: 空闲"));
+    m_ui->testStateLabel->setText(tr("Status: Idle"));
     m_ui->testMetricsLabel->clear();
     if (!last.sessionId.isEmpty()) {
         m_ui->testResultLabel->setText(QStringLiteral("%1 %2: %3 | %4: %5 | %6: %7")
-                                           .arg(uiText("Completed!", "已完成!"))
-                                           .arg(uiText("Avg", "平均"))
+                                           .arg(tr("Completed!"))
+                                           .arg(tr("Avg"))
                                            .arg(formatHz(last.summary.avgHz))
-                                           .arg(uiText("Score", "评分"))
+                                           .arg(tr("Score"))
                                            .arg(formatScore(last.summary.stabilityScore))
-                                           .arg(uiText("Time", "时间"))
+                                           .arg(tr("Time"))
                                            .arg(formatDuration(last.durationMs)));
     } else {
-        m_ui->testResultLabel->setText(uiText("Start a test to collect data.", "开始测试后显示结果。"));
+        m_ui->testResultLabel->setText(tr("Start a test to collect data."));
     }
 }
 
 void Gg::refreshHistory()
 {
+    // 每次刷新都从仓储层重新加载，确保表格反映最新落盘结果。
     m_controller->reloadHistory();
     const QVector<SessionRecord> records = m_controller->history();
 
@@ -466,13 +498,13 @@ void Gg::refreshHistory()
     for (int i = 0; i < records.size(); ++i) {
         const SessionRecord& rec = records.at(i);
         m_ui->historyTable->setItem(i, 0, new QTableWidgetItem(rec.startTimeUtc.toString(QStringLiteral("yyyy-MM-dd HH:mm:ss"))));
-        m_ui->historyTable->setItem(i, 1, new QTableWidgetItem(testModeToDisplayString(rec.mode, m_uiLanguage)));
+        m_ui->historyTable->setItem(i, 1, new QTableWidgetItem(testModeToDisplayString(rec.mode)));
         m_ui->historyTable->setItem(i, 2, new QTableWidgetItem(rec.summary.device.displayName));
         m_ui->historyTable->setItem(i, 3, new QTableWidgetItem(formatDuration(rec.durationMs)));
         m_ui->historyTable->setItem(i, 4, new QTableWidgetItem(formatHz(rec.summary.avgHz)));
         m_ui->historyTable->setItem(i, 5, new QTableWidgetItem(formatScore(rec.summary.stabilityScore)));
         m_ui->historyTable->setItem(i, 6, new QTableWidgetItem(formatJitter(rec.summary.jitterValue)));
-        auto* actionItem = new QTableWidgetItem(uiText("[Export]", "[导出]"));
+        auto* actionItem = new QTableWidgetItem(tr("[Export]"));
         actionItem->setData(Qt::UserRole, rec.sessionId);
         m_ui->historyTable->setItem(i, kHistoryActionColumn, actionItem);
     }
@@ -480,6 +512,7 @@ void Gg::refreshHistory()
 
 void Gg::refreshCompare()
 {
+    // 对比页基于历史记录做筛选，保持与历史页数据来源一致。
     const QVector<SessionRecord> allRecords = m_controller->history();
     QVector<SessionRecord> selected;
     for (const QString& id : m_compareSessionIds) {
@@ -491,13 +524,13 @@ void Gg::refreshCompare()
         }
     }
 
-    m_ui->compareSelectionLabel->setText(uiText("Selected %1", "已选择 %1").arg(selected.size()));
+    m_ui->compareSelectionLabel->setText(tr("Selected %1").arg(selected.size()));
     m_ui->compareTable->clearContents();
     m_ui->compareTable->setRowCount(selected.size());
     for (int i = 0; i < selected.size(); ++i) {
         const SessionRecord& rec = selected.at(i);
         m_ui->compareTable->setItem(i, 0, new QTableWidgetItem(rec.startTimeUtc.toString(QStringLiteral("yyyy-MM-dd HH:mm"))));
-        m_ui->compareTable->setItem(i, 1, new QTableWidgetItem(testModeToDisplayString(rec.mode, m_uiLanguage)));
+        m_ui->compareTable->setItem(i, 1, new QTableWidgetItem(testModeToDisplayString(rec.mode)));
         m_ui->compareTable->setItem(i, 2, new QTableWidgetItem(rec.summary.device.displayName));
         m_ui->compareTable->setItem(i, 3, new QTableWidgetItem(formatHz(rec.summary.avgHz)));
         m_ui->compareTable->setItem(i, 4, new QTableWidgetItem(formatHz(rec.summary.maxHz)));
@@ -514,7 +547,7 @@ void Gg::onStartTest()
 
     QString error;
     if (!m_controller->startTest(mode, &error)) {
-        QMessageBox::warning(this, uiText("Error", "错误"), error);
+        QMessageBox::warning(this, tr("Error"), error);
         return;
     }
 
@@ -525,7 +558,7 @@ void Gg::onStopTest()
 {
     QString error;
     if (!m_controller->stopTest(&error)) {
-        QMessageBox::warning(this, uiText("Error", "错误"), error);
+        QMessageBox::warning(this, tr("Error"), error);
         return;
     }
 
@@ -537,12 +570,12 @@ void Gg::onExportSelected()
 {
     const QModelIndexList selected = m_ui->historyTable->selectionModel()->selectedRows();
     if (selected.isEmpty()) {
-        QMessageBox::information(this, uiText("Export", "导出"), uiText("Select records first.", "请先选择记录。"));
+        QMessageBox::information(this, tr("Export"), tr("Select records first."));
         return;
     }
 
     const QString filter = QStringLiteral("CSV (*.csv);;JSON (*.json)");
-    const QString fileName = QFileDialog::getSaveFileName(this, uiText("Export", "导出"), QString(), filter);
+    const QString fileName = QFileDialog::getSaveFileName(this, tr("Export"), QString(), filter);
     if (fileName.isEmpty()) {
         return;
     }
@@ -553,18 +586,18 @@ void Gg::onExportSelected()
 
     QString error;
     if (!m_controller->exportSession(sessionId, fileName, asJson, &error)) {
-        QMessageBox::warning(this, uiText("Error", "错误"), error);
+        QMessageBox::warning(this, tr("Error"), error);
         return;
     }
 
-    QMessageBox::information(this, uiText("Success", "成功"), uiText("Exported to:\n%1", "已导出到:\n%1").arg(fileName));
+    QMessageBox::information(this, tr("Success"), tr("Exported to:\n%1").arg(fileName));
 }
 
 void Gg::onAddToCompare()
 {
     const QModelIndexList selected = m_ui->historyTable->selectionModel()->selectedRows();
     if (selected.isEmpty()) {
-        QMessageBox::information(this, uiText("Compare", "对比"), uiText("Select records first.", "请先选择记录。"));
+        QMessageBox::information(this, tr("Compare"), tr("Select records first."));
         return;
     }
 
@@ -581,18 +614,23 @@ void Gg::onAddToCompare()
 
 void Gg::onSwitchToEnglish()
 {
-    setLanguage(UiLanguage::English);
+    activateEnglishTranslation();
 }
 
 void Gg::onSwitchToChinese()
 {
-    setLanguage(UiLanguage::Chinese);
+    if (!activateChineseTranslation()) {
+        QMessageBox::warning(this, tr("Error"), tr("Failed to load translation file: %1").arg(chineseTranslationFilePath()));
+    }
 }
 
 void Gg::changeEvent(QEvent* event)
 {
     if (event && event->type() == QEvent::LanguageChange) {
         retranslateUi();
+        refreshAll();
+        refreshHistory();
+        refreshCompare();
     }
     if (event && (event->type() == QEvent::WindowStateChange || event->type() == QEvent::ActivationChange)) {
         updateUiActiveState();
@@ -611,10 +649,11 @@ void Gg::showEvent(QShowEvent* event)
         connect(timer, &QTimer::timeout, this, &Gg::refreshAll);
         timer->start(kRefreshIntervalMs);
 
+        // 绑定 Raw Input 需要窗口句柄已经完成创建，因此延后到首帧后执行。
         QTimer::singleShot(0, this, [this] {
             QString error;
             if (!m_controller->bindInputWindow(winId(), &error)) {
-                QMessageBox::warning(this, uiText("Error", "错误"), error);
+                QMessageBox::warning(this, tr("Error"), error);
             }
 
             updateUiActiveState();

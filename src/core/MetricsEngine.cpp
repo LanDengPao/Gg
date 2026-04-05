@@ -15,6 +15,7 @@ constexpr int kMaxHistoryPoints = 240;
 constexpr int kMaxTrajectoryPoints = 320;
 constexpr int kMaxRecentDeltas = 64;
 
+// 限制实时图表与轨迹缓存规模，避免长时间监控时内存持续增长。
 double clampScore(double value)
 {
     return std::max(0.0, std::min(100.0, value));
@@ -82,6 +83,7 @@ void MetricsEngine::ingestSample(const MouseSample& sample)
     }
 
     if (dtUs > 0) {
+        // 由相邻采样的时间间隔换算瞬时轮询率。
         const double hz = 1000000.0 / static_cast<double>(dtUs);
         m_snapshot.currentHz = hz;
         m_recentHz.push_back({sample.timestampUs, hz});
@@ -103,6 +105,7 @@ void MetricsEngine::ingestSample(const MouseSample& sample)
         }
     }
 
+    // 仅在发生位移时更新轨迹和抖动统计，避免静止数据污染预览。
     if (!sample.delta.isNull()) {
         m_recentTrajectory.push_back(QPointF(sample.position));
         if (m_recentTrajectory.size() > kMaxTrajectoryPoints) {
@@ -211,6 +214,7 @@ SessionSummary MetricsEngine::buildSessionSummary(const QString& sessionId,
 
 void MetricsEngine::pruneWindows(qint64 nowUs)
 {
+    // 实时统计仅保留最近 30 秒窗口，供仪表盘曲线和滚动指标使用。
     const qint64 cutoff = nowUs - kThirtySecondsUs;
     int removeCount = 0;
     while (removeCount < m_recentHz.size() && m_recentHz.at(removeCount).timestampUs < cutoff) {
@@ -236,6 +240,7 @@ double MetricsEngine::averageForWindow(const QVector<HzPoint>& points, qint64 no
         return 0.0;
     }
 
+    // 这里按采样间隔的倒数求平均，避免直接平均 Hz 对高频样本产生偏置。
     double inverseHzSum = 0.0;
     int count = 0;
     const qint64 cutoff = windowUs == std::numeric_limits<qint64>::max()
@@ -274,6 +279,7 @@ double MetricsEngine::stabilityScore(double mean, double sd)
 
 void MetricsEngine::updateDerivedStats()
 {
+    // 从同一份最近窗口数据派生不同时间尺度下的统计指标。
     m_snapshot.avgHz1s = averageForWindow(m_recentHz, m_lastTimestampUs, kOneSecondUs);
     m_snapshot.avgHz5s = averageForWindow(m_recentHz, m_lastTimestampUs, kFiveSecondsUs);
     m_snapshot.avgHz30s = averageForWindow(m_recentHz, m_lastTimestampUs, kThirtySecondsUs);

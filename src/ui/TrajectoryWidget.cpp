@@ -1,11 +1,22 @@
-﻿#include "TrajectoryWidget.h"
+#include "TrajectoryWidget.h"
 
 #include <QPainter>
+
+namespace {
+constexpr int kMinimumTrajectoryHeight = 200;
+constexpr qreal kPanelRadius = 10.0;
+constexpr qreal kPanelPadding = 12.0;
+
+const QColor kPanelBackground(249, 251, 254);
+const QColor kPanelBorder(216, 224, 235);
+const QColor kTextColor(107, 114, 128);
+const QColor kPathColor(22, 163, 74);
+}  // namespace
 
 TrajectoryWidget::TrajectoryWidget(QWidget* parent)
     : QWidget(parent)
 {
-    setMinimumHeight(200);
+    setMinimumHeight(kMinimumTrajectoryHeight);
 }
 
 void TrajectoryWidget::setPoints(const QVector<QPointF>& points)
@@ -20,11 +31,17 @@ void TrajectoryWidget::paintEvent(QPaintEvent* event)
 
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
-    painter.fillRect(rect(), QColor(15, 23, 42));
+
+    const QRectF panel = rect().adjusted(1.0, 1.0, -1.0, -1.0);
+    const QRectF frame = panel.adjusted(kPanelPadding, kPanelPadding, -kPanelPadding, -kPanelPadding);
+
+    painter.setPen(QPen(kPanelBorder, 1.0));
+    painter.setBrush(kPanelBackground);
+    painter.drawRoundedRect(panel, kPanelRadius, kPanelRadius);
 
     if (m_points.size() < 2) {
-        painter.setPen(QColor(203, 213, 225));
-        painter.drawText(rect(), Qt::AlignCenter, QStringLiteral("移动鼠标后显示轨迹预览"));
+        painter.setPen(kTextColor);
+        painter.drawText(panel.toRect(), Qt::AlignCenter, tr("Move the mouse to preview the trajectory"));
         return;
     }
 
@@ -45,7 +62,6 @@ void TrajectoryWidget::paintEvent(QPaintEvent* event)
         maxY += 1.0;
     }
 
-    const QRectF frame = rect().adjusted(12, 12, -12, -12);
     QPainterPath path;
     for (int i = 0; i < m_points.size(); ++i) {
         const QPointF& raw = m_points.at(i);
@@ -58,6 +74,6 @@ void TrajectoryWidget::paintEvent(QPaintEvent* event)
         }
     }
 
-    painter.setPen(QPen(QColor(34, 197, 94), 2.0));
+    painter.setPen(QPen(kPathColor, 2.0, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     painter.drawPath(path);
 }
