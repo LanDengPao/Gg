@@ -14,6 +14,7 @@ file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS
     "src/ui/app/*.cpp"
     "src/ui/app/*.ui"
     "src/ui/app/*.qrc"
+    "src/ui/app/*.rc"
 )
 
 set(TS_FILES
