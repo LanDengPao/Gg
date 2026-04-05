@@ -1,4 +1,5 @@
 <RCC>
     <qresource prefix="Gg">
+        <file>gg.qss</file>
     </qresource>
 </RCC>

@@ -10,7 +10,11 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 add_subdirectory(src/core)
 add_subdirectory(src/ui)
 
-file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS "src/ui/app/*.cpp")
+file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS
+    "src/ui/app/*.cpp"
+    "src/ui/app/*.ui"
+    "src/ui/app/*.qrc"
+)
 
 add_executable(Gg WIN32)
 

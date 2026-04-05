@@ -1,29 +1,979 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<UI version="4.0" >
- <class>GgClass</class>
- <widget class="QMainWindow" name="GgClass" >
-  <property name="objectName" >
-   <string notr="true">GgClass</string>
-  </property>
-  <property name="geometry" >
+<ui version="4.0">
+ <class>Gg</class>
+ <widget class="QMainWindow" name="Gg">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
-    <height>400</height>
+    <width>1280</width>
+    <height>800</height>
    </rect>
   </property>
-  <property name="windowTitle" >
-   <string>Gg</string>
-  </property>  <widget class="QMenuBar" name="menuBar" />
-  <widget class="QToolBar" name="mainToolBar" />
-  <widget class="QWidget" name="centralWidget" />
-  <widget class="QStatusBar" name="statusBar" />
+  <property name="minimumSize">
+   <size>
+    <width>960</width>
+    <height>600</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Mouse Data</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QHBoxLayout" name="rootLayout">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QListWidget" name="navigationList">
+      <property name="minimumSize">
+       <size>
+        <width>180</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>180</width>
+        <height>16777215</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QStackedWidget" name="pageStack">
+      <widget class="QWidget" name="dashboardPage">
+       <layout class="QVBoxLayout" name="dashboardPageLayout">
+        <property name="leftMargin">
+         <number>16</number>
+        </property>
+        <property name="topMargin">
+         <number>16</number>
+        </property>
+        <property name="rightMargin">
+         <number>16</number>
+        </property>
+        <property name="bottomMargin">
+         <number>16</number>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="dashboardScrollArea">
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="dashboardScrollContent">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>1068</width>
+             <height>723</height>
+            </rect>
+           </property>
+           <layout class="QVBoxLayout" name="dashboardContentLayout">
+            <property name="spacing">
+             <number>12</number>
+            </property>
+            <item>
+             <layout class="QHBoxLayout" name="dashboardTopRowLayout">
+              <property name="spacing">
+               <number>12</number>
+              </property>
+              <item>
+               <widget class="QFrame" name="lastSessionCard">
+                <layout class="QVBoxLayout" name="lastSessionCardLayout">
+                 <property name="spacing">
+                  <number>8</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="lastSessionTitleLabel">
+                   <property name="text">
+                    <string>Last Session</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="lastSessionLabel">
+                   <property name="text">
+                    <string>No Records</string>
+                   </property>
+                   <property name="wordWrap">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="lastSessionButtonsLayout">
+                   <item>
+                    <widget class="QPushButton" name="lastSessionDetailsButton">
+                     <property name="text">
+                      <string>Details</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="lastSessionCompareButton">
+                     <property name="text">
+                      <string>Compare</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QFrame" name="currentDeviceCard">
+                <layout class="QVBoxLayout" name="currentDeviceCardLayout">
+                 <property name="spacing">
+                  <number>8</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="currentDeviceTitleLabel">
+                   <property name="text">
+                    <string>Current Device</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="deviceInfoLabel">
+                   <property name="text">
+                    <string>No Mouse</string>
+                   </property>
+                   <property name="wordWrap">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="deviceMoreButton">
+                   <property name="text">
+                    <string>More</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="dashboardStatsRowLayout">
+              <property name="spacing">
+               <number>12</number>
+              </property>
+              <item>
+               <widget class="QFrame" name="dashboardHzCard">
+                <layout class="QVBoxLayout" name="dashboardHzCardLayout">
+                 <property name="spacing">
+                  <number>2</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="dashboardHzTitleLabel">
+                   <property name="text">
+                    <string>Current Hz</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="dashboardHzValueLabel">
+                   <property name="text">
+                    <string>-</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="dashboardHzUnitLabel">
+                   <property name="text">
+                    <string>Hz</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QFrame" name="dashboardAvgCard">
+                <layout class="QVBoxLayout" name="dashboardAvgCardLayout">
+                 <property name="spacing">
+                  <number>2</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="dashboardAvgTitleLabel">
+                   <property name="text">
+                    <string>1s Avg</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="dashboardAvgValueLabel">
+                   <property name="text">
+                    <string>-</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="dashboardAvgUnitLabel">
+                   <property name="text">
+                    <string>Hz</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QFrame" name="dashboardStdCard">
+                <layout class="QVBoxLayout" name="dashboardStdCardLayout">
+                 <property name="spacing">
+                  <number>2</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="dashboardStdTitleLabel">
+                   <property name="text">
+                    <string>Std Dev</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="dashboardStdValueLabel">
+                   <property name="text">
+                    <string>-</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="dashboardStdUnitLabel">
+                   <property name="text">
+                    <string>Hz</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QFrame" name="dashboardSpeedCard">
+                <layout class="QVBoxLayout" name="dashboardSpeedCardLayout">
+                 <property name="spacing">
+                  <number>2</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="dashboardSpeedTitleLabel">
+                   <property name="text">
+                    <string>Speed</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="dashboardSpeedValueLabel">
+                   <property name="text">
+                    <string>-</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="dashboardSpeedUnitLabel">
+                   <property name="text">
+                    <string>px/s</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QFrame" name="dashboardJitterCard">
+                <layout class="QVBoxLayout" name="dashboardJitterCardLayout">
+                 <property name="spacing">
+                  <number>2</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="dashboardJitterTitleLabel">
+                   <property name="text">
+                    <string>Jitter</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="dashboardJitterValueLabel">
+                   <property name="text">
+                    <string>-</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="dashboardJitterUnitLabel">
+                   <property name="text">
+                    <string>px</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QFrame" name="dashboardClicksCard">
+                <layout class="QVBoxLayout" name="dashboardClicksCardLayout">
+                 <property name="spacing">
+                  <number>2</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="dashboardClicksTitleLabel">
+                   <property name="text">
+                    <string>Clicks</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="dashboardClicksValueLabel">
+                   <property name="text">
+                    <string>-</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="dashboardClicksUnitLabel">
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="dashboardChartRowLayout">
+              <property name="spacing">
+               <number>12</number>
+              </property>
+              <item>
+               <widget class="QFrame" name="dashboardChartCard">
+                <layout class="QVBoxLayout" name="dashboardChartCardLayout">
+                 <property name="spacing">
+                  <number>8</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="dashboardChartTitleLabel">
+                   <property name="text">
+                    <string>Polling Chart</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="SparklineWidget" name="dashboardChart" native="true"/>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QFrame" name="dashboardTrajectoryCard">
+                <layout class="QVBoxLayout" name="dashboardTrajectoryCardLayout">
+                 <property name="spacing">
+                  <number>8</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="dashboardTrajectoryTitleLabel">
+                   <property name="text">
+                    <string>Trajectory</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="TrajectoryWidget" name="dashboardTrajectory" native="true"/>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <spacer name="dashboardBottomSpacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="testPage">
+       <layout class="QVBoxLayout" name="testPageLayout">
+        <property name="leftMargin">
+         <number>16</number>
+        </property>
+        <property name="topMargin">
+         <number>16</number>
+        </property>
+        <property name="rightMargin">
+         <number>16</number>
+        </property>
+        <property name="bottomMargin">
+         <number>16</number>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="testScrollArea">
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="testScrollContent">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>280</width>
+             <height>311</height>
+            </rect>
+           </property>
+           <layout class="QVBoxLayout" name="testContentLayout">
+            <property name="spacing">
+             <number>12</number>
+            </property>
+            <item>
+             <widget class="QGroupBox" name="testModeGroup">
+              <property name="title">
+               <string>Test Mode</string>
+              </property>
+              <layout class="QHBoxLayout" name="testModeLayout">
+               <item>
+                <widget class="QComboBox" name="testModeCombo"/>
+               </item>
+               <item>
+                <spacer name="testModeSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="controlGroup">
+              <property name="title">
+               <string>Control</string>
+              </property>
+              <layout class="QVBoxLayout" name="controlGroupLayout">
+               <item>
+                <layout class="QHBoxLayout" name="controlRowLayout">
+                 <item>
+                  <widget class="QPushButton" name="startButton">
+                   <property name="text">
+                    <string>Start</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="stopButton">
+                   <property name="text">
+                    <string>Stop</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="testStateLabel">
+                   <property name="text">
+                    <string>Status: Idle</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="controlRowSpacer">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="QLabel" name="testMetricsLabel">
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="metricsGroup">
+              <property name="title">
+               <string>Metrics</string>
+              </property>
+              <layout class="QVBoxLayout" name="metricsGroupLayout">
+               <item>
+                <widget class="QLabel" name="testResultLabel">
+                 <property name="text">
+                  <string>Start a test to collect data.</string>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="chartGroup">
+              <property name="title">
+               <string>Chart</string>
+              </property>
+              <layout class="QHBoxLayout" name="chartGroupLayout">
+               <item>
+                <widget class="SparklineWidget" name="testChart" native="true"/>
+               </item>
+               <item>
+                <widget class="TrajectoryWidget" name="testTrajectory" native="true"/>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <spacer name="testBottomSpacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="historyPage">
+       <layout class="QVBoxLayout" name="historyPageLayout">
+        <property name="leftMargin">
+         <number>16</number>
+        </property>
+        <property name="topMargin">
+         <number>16</number>
+        </property>
+        <property name="rightMargin">
+         <number>16</number>
+        </property>
+        <property name="bottomMargin">
+         <number>16</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="historyTitleLabel">
+          <property name="text">
+           <string>History</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTableWidget" name="historyTable"/>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="historyButtonsLayout">
+          <item>
+           <widget class="QPushButton" name="historyExportButton">
+            <property name="text">
+             <string>Export</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="historyCompareButton">
+            <property name="text">
+             <string>Compare</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="historyRefreshButton">
+            <property name="text">
+             <string>Refresh</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="historyButtonsSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="comparePage">
+       <layout class="QVBoxLayout" name="comparePageLayout">
+        <property name="leftMargin">
+         <number>16</number>
+        </property>
+        <property name="topMargin">
+         <number>16</number>
+        </property>
+        <property name="rightMargin">
+         <number>16</number>
+        </property>
+        <property name="bottomMargin">
+         <number>16</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="compareTitleLabel">
+          <property name="text">
+           <string>Compare</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="compareSelectionLabel">
+          <property name="text">
+           <string>Selected 0</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="compareButtonsLayout">
+          <item>
+           <widget class="QPushButton" name="compareAddButton">
+            <property name="text">
+             <string>Add</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="compareClearButton">
+            <property name="text">
+             <string>Clear</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="compareButtonsSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QTableWidget" name="compareTable"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="devicePage">
+       <layout class="QVBoxLayout" name="devicePageLayout">
+        <property name="leftMargin">
+         <number>16</number>
+        </property>
+        <property name="topMargin">
+         <number>16</number>
+        </property>
+        <property name="rightMargin">
+         <number>16</number>
+        </property>
+        <property name="bottomMargin">
+         <number>16</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="deviceTitleLabel">
+          <property name="text">
+           <string>Device</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QFrame" name="deviceInfoCard">
+          <layout class="QVBoxLayout" name="deviceInfoCardLayout">
+           <item>
+            <widget class="QGroupBox" name="deviceBasicGroup">
+             <property name="title">
+              <string>Basic</string>
+             </property>
+             <layout class="QFormLayout" name="deviceBasicLayout">
+              <item row="0" column="0">
+               <widget class="QLabel" name="deviceNameFieldLabel">
+                <property name="text">
+                 <string>Name:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLabel" name="deviceNameValueLabel">
+                <property name="text">
+                 <string>-</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="deviceVendorFieldLabel">
+                <property name="text">
+                 <string>Vendor:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QLabel" name="deviceVendorValueLabel">
+                <property name="text">
+                 <string>-</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="deviceVidFieldLabel">
+                <property name="text">
+                 <string>VID:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QLabel" name="deviceVidValueLabel">
+                <property name="text">
+                 <string>-</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="devicePidFieldLabel">
+                <property name="text">
+                 <string>PID:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QLabel" name="devicePidValueLabel">
+                <property name="text">
+                 <string>-</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="deviceStatusGroup">
+             <property name="title">
+              <string>Status</string>
+             </property>
+             <layout class="QFormLayout" name="deviceStatusLayout">
+              <item row="0" column="0">
+               <widget class="QLabel" name="deviceConnectionFieldLabel">
+                <property name="text">
+                 <string>Connection:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLabel" name="deviceConnectedValueLabel">
+                <property name="text">
+                 <string>-</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="deviceTypeFieldLabel">
+                <property name="text">
+                 <string>Type:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QLabel" name="deviceTypeValueLabel">
+                <property name="text">
+                 <string>-</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <spacer name="deviceBottomSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1280</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuLanguage">
+    <property name="title">
+     <string>Language</string>
+    </property>
+    <addaction name="actionEnglish"/>
+    <addaction name="actionChinese"/>
+   </widget>
+   <addaction name="menuLanguage"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionEnglish">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>English</string>
+   </property>
+  </action>
+  <action name="actionChinese">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>中文</string>
+   </property>
+  </action>
  </widget>
- <layoutDefault spacing="6" margin="11" />
- <pixmapfunction></pixmapfunction>
+ <customwidgets>
+  <customwidget>
+   <class>SparklineWidget</class>
+   <extends>QWidget</extends>
+   <header>SparklineWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>TrajectoryWidget</class>
+   <extends>QWidget</extends>
+   <header>TrajectoryWidget.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
-   <include location="Gg.qrc"/>
+  <include location="Gg.qrc"/>
  </resources>
  <connections/>
-</UI>
+</ui>

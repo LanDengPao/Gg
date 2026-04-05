@@ -1,0 +1,284 @@
+QMainWindow,
+QWidget#centralWidget,
+QWidget#dashboardPage,
+QWidget#testPage,
+QWidget#historyPage,
+QWidget#comparePage,
+QWidget#devicePage,
+QWidget#dashboardScrollContent,
+QWidget#testScrollContent {
+    background: #0F172A;
+    color: #F1F5F9;
+}
+
+QMenuBar {
+    background: #0F172A;
+    color: #F1F5F9;
+}
+
+QMenuBar::item {
+    background: transparent;
+    padding: 6px 10px;
+}
+
+QMenuBar::item:selected {
+    background: #1E293B;
+}
+
+QMenu {
+    background: #1E293B;
+    color: #F1F5F9;
+    border: 1px solid #334155;
+}
+
+QMenu::item:selected {
+    background: #3B82F6;
+}
+
+QListWidget#navigationList {
+    background: #0F172A;
+    border: none;
+    padding: 8px;
+}
+
+QListWidget#navigationList::item {
+    color: #94A3B8;
+    padding: 10px 16px;
+    margin: 2px 0;
+    border-radius: 6px;
+}
+
+QListWidget#navigationList::item:selected {
+    background: #1E40AF;
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+QListWidget#navigationList::item:hover:!selected {
+    background: #1E293B;
+}
+
+QScrollArea {
+    background: transparent;
+    border: none;
+}
+
+QStatusBar {
+    background: #1E293B;
+}
+
+QStatusBar::item {
+    border: none;
+}
+
+QLabel#statusLabel,
+QLabel#modeLabel,
+QLabel#deviceLabel,
+QLabel#backgroundLabel,
+QLabel#workspaceLabel,
+QLabel#statusSeparatorLabel {
+    background: transparent;
+    font-size: 12px;
+}
+
+QLabel#statusLabel {
+    font-weight: 700;
+}
+
+QLabel#statusLabel[tone="active"] {
+    color: #22C55E;
+}
+
+QLabel#statusLabel[tone="recording"] {
+    color: #EF4444;
+}
+
+QLabel#modeLabel,
+QLabel#deviceLabel,
+QLabel#workspaceLabel {
+    color: #94A3B8;
+}
+
+QLabel#backgroundLabel {
+    color: #EF4444;
+    font-weight: 700;
+}
+
+QLabel#statusSeparatorLabel {
+    color: #475569;
+    padding: 0 6px;
+}
+
+QFrame#lastSessionCard,
+QFrame#currentDeviceCard,
+QFrame#dashboardHzCard,
+QFrame#dashboardAvgCard,
+QFrame#dashboardStdCard,
+QFrame#dashboardSpeedCard,
+QFrame#dashboardJitterCard,
+QFrame#dashboardClicksCard,
+QFrame#dashboardChartCard,
+QFrame#dashboardTrajectoryCard,
+QFrame#deviceInfoCard {
+    background: #1E293B;
+    border: 1px solid #334155;
+    border-radius: 8px;
+}
+
+QLabel#lastSessionTitleLabel,
+QLabel#currentDeviceTitleLabel {
+    color: #F1F5F9;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+QLabel#lastSessionLabel,
+QLabel#deviceInfoLabel,
+QLabel#testMetricsLabel,
+QLabel#compareSelectionLabel {
+    color: #94A3B8;
+    font-size: 12px;
+}
+
+QLabel#historyTitleLabel,
+QLabel#compareTitleLabel,
+QLabel#deviceTitleLabel {
+    color: #F1F5F9;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+QLabel#dashboardChartTitleLabel,
+QLabel#dashboardTrajectoryTitleLabel {
+    color: #F1F5F9;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QLabel#dashboardHzTitleLabel,
+QLabel#dashboardAvgTitleLabel,
+QLabel#dashboardStdTitleLabel,
+QLabel#dashboardSpeedTitleLabel,
+QLabel#dashboardJitterTitleLabel,
+QLabel#dashboardClicksTitleLabel {
+    color: #F1F5F9;
+    font-size: 11px;
+}
+
+QLabel#dashboardHzValueLabel,
+QLabel#dashboardAvgValueLabel,
+QLabel#dashboardStdValueLabel,
+QLabel#dashboardSpeedValueLabel,
+QLabel#dashboardJitterValueLabel,
+QLabel#dashboardClicksValueLabel {
+    color: #38BDF8;
+    font-size: 18pt;
+    font-weight: 700;
+}
+
+QLabel#dashboardHzUnitLabel,
+QLabel#dashboardAvgUnitLabel,
+QLabel#dashboardStdUnitLabel,
+QLabel#dashboardSpeedUnitLabel,
+QLabel#dashboardJitterUnitLabel,
+QLabel#dashboardClicksUnitLabel,
+QLabel#testStateLabel,
+QLabel#testResultLabel {
+    color: #94A3B8;
+    font-size: 13px;
+}
+
+QGroupBox {
+    color: #F1F5F9;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    margin-top: 10px;
+    padding: 12px;
+    font-size: 14px;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 12px;
+    padding: 0 4px;
+}
+
+QLabel#deviceNameFieldLabel,
+QLabel#deviceVendorFieldLabel,
+QLabel#deviceVidFieldLabel,
+QLabel#devicePidFieldLabel,
+QLabel#deviceConnectionFieldLabel,
+QLabel#deviceTypeFieldLabel {
+    color: #94A3B8;
+    min-width: 80px;
+}
+
+QPushButton {
+    background: #3B82F6;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QPushButton:hover {
+    background: #2563EB;
+}
+
+QPushButton:pressed {
+    background: #1D4ED8;
+}
+
+QPushButton:disabled {
+    background: #475569;
+    color: #94A3B8;
+}
+
+QComboBox {
+    background: #1E293B;
+    color: #F1F5F9;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    padding: 8px 12px;
+    min-width: 200px;
+}
+
+QComboBox:hover {
+    border-color: #3B82F6;
+}
+
+QComboBox::drop-down {
+    border: none;
+}
+
+QComboBox QAbstractItemView {
+    background: #1E293B;
+    color: #F1F5F9;
+    selection-background-color: #3B82F6;
+}
+
+QTableWidget {
+    background: #1E293B;
+    color: #F1F5F9;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    gridline-color: #334155;
+}
+
+QTableWidget::item {
+    padding: 8px;
+}
+
+QTableWidget::item:selected {
+    background: #3B82F6;
+}
+
+QHeaderView::section {
+    background: #0F172A;
+    color: #94A3B8;
+    padding: 8px;
+    border: none;
+    border-bottom: 1px solid #334155;
+}
