@@ -1,4 +1,5 @@
-// Utility class for calling a lambda on a new thread.
+#pragma once
+
 #include <functional>
 #include <limits>
 #include <QObject>
@@ -10,7 +11,7 @@ class LambdaThread : public QObject
 private:
     Q_OBJECT
 
-        std::function<void()> m_func;
+    std::function<void()> m_func;
     QThread* m_Thread;
     QSemaphore completed;
     bool m_SelfDelete = false;
@@ -31,6 +32,7 @@ public slots:
     }
 
     void selfDelete(bool d) { m_SelfDelete = d; }
+
 public:
     explicit LambdaThread(std::function<void()> f)
     {
@@ -59,4 +61,3 @@ public:
     void moveObjectToThread(QObject* o) { o->moveToThread(m_Thread); }
     bool isCurrentThread() { return QThread::currentThread() == m_Thread; }
 };
-

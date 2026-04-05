@@ -2,6 +2,9 @@
 
 本文件供 AI 编码代理使用，提供构建、编码规范和项目结构指导。
 
+项目源码组织与架构设计：AGENTS_architecture.md
+项目配置与构建规范：AGENTS_cmake.md
+
 ---
 
 ## 1. 构建命令

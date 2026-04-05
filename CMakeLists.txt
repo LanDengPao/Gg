@@ -7,23 +7,14 @@ include(cmake/config.cmake)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
-add_subdirectory(lib/types)
-add_subdirectory(lib/common)
-add_subdirectory(lib/data)
-add_subdirectory(lib/core)
-add_subdirectory(lib/device)
-add_subdirectory(lib/ui)
+add_subdirectory(src/core)
+add_subdirectory(src/ui)
 
-file(GLOB_RECURSE LIB_HEADERS CONFIGURE_DEPENDS "include/Gg/*.h")
+file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS "src/ui/app/*.cpp")
 
 add_executable(Gg WIN32)
 
-target_sources(Gg PRIVATE
-    "src/main.cpp"
-    "src/Gg.cpp"
-    "src/AppController.cpp"
-    ${LIB_HEADERS}
-)
+target_sources(Gg PRIVATE ${APP_SOURCES})
 
 set_target_properties(Gg PROPERTIES 
     AUTOMOC TRUE
@@ -33,20 +24,12 @@ set_target_properties(Gg PROPERTIES
 target_compile_features(Gg PRIVATE cxx_std_23)
 
 target_include_directories(Gg PRIVATE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/Gg
-)
-target_include_directories(Gg PUBLIC 
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/app
 )
 
-target_link_libraries(Gg PRIVATE 
+target_link_libraries(Gg PUBLIC 
     GgUi
-    GgDevice
     GgCore
-    GgData
-    GgCommon
-    GgTypes
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Core
     Setupapi
