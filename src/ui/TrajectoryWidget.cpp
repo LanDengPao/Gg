@@ -50,7 +50,7 @@ void TrajectoryWidget::paintEvent(QPaintEvent* event)
     for (int i = 0; i < m_points.size(); ++i) {
         const QPointF& raw = m_points.at(i);
         const qreal x = frame.left() + ((raw.x() - minX) / (maxX - minX)) * frame.width();
-        const qreal y = frame.bottom() - ((raw.y() - minY) / (maxY - minY)) * frame.height();
+        const qreal y = frame.top() + ((raw.y() - minY) / (maxY - minY)) * frame.height();
         if (i == 0) {
             path.moveTo(x, y);
         } else {

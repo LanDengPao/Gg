@@ -4,6 +4,8 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QPoint>
+#include <QString>
+#include <QtGlobal>
 #include <QVector>
 
 enum class TestMode
@@ -313,6 +315,34 @@ inline DeviceInfo deviceInfoFromJson(const QJsonObject& obj)
     return device;
 }
 
+inline QJsonObject toJson(const SessionRecord& record)
+{
+    QJsonObject obj;
+    obj["session_id"] = record.sessionId;
+    obj["mode"] = testModeKey(record.mode);
+    obj["status"] = sessionStatusKey(record.status);
+    obj["start_time_utc"] = record.startTimeUtc.toString(Qt::ISODate);
+    obj["end_time_utc"] = record.endTimeUtc.toString(Qt::ISODate);
+    obj["duration_ms"] = static_cast<qint64>(record.durationMs);
+    obj["sample_count"] = static_cast<qint64>(record.sampleCount);
+    obj["session_dir"] = record.sessionDir;
+    return obj;
+}
+
+inline SessionRecord sessionRecordFromJson(const QJsonObject& obj)
+{
+    SessionRecord record;
+    record.sessionId = obj["session_id"].toString();
+    record.mode = testModeFromStoredString(obj["mode"].toString());
+    record.status = sessionStatusFromStoredString(obj["status"].toString());
+    record.startTimeUtc = QDateTime::fromString(obj["start_time_utc"].toString(), Qt::ISODate);
+    record.endTimeUtc = QDateTime::fromString(obj["end_time_utc"].toString(), Qt::ISODate);
+    record.durationMs = static_cast<qint64>(obj["duration_ms"].toDouble());
+    record.sampleCount = static_cast<qint64>(obj["sample_count"].toDouble());
+    record.sessionDir = obj["session_dir"].toString();
+    return record;
+}
+
 inline QJsonObject toJson(const SessionSummary& summary)
 {
     QJsonObject obj;
@@ -339,6 +369,34 @@ inline QJsonObject toJson(const SessionSummary& summary)
     obj["wheel_event_count"] = static_cast<qint64>(summary.wheelEventCount);
     obj["device"] = toJson(summary.device);
     return obj;
+}
+
+inline SessionSummary sessionSummaryFromJson(const QJsonObject& obj)
+{
+    SessionSummary summary;
+    summary.sessionId = obj["session_id"].toString();
+    summary.mode = testModeFromStoredString(obj["mode"].toString());
+    summary.status = sessionStatusFromStoredString(obj["status"].toString());
+    summary.startTimeUtc = QDateTime::fromString(obj["start_time_utc"].toString(), Qt::ISODate);
+    summary.endTimeUtc = QDateTime::fromString(obj["end_time_utc"].toString(), Qt::ISODate);
+    summary.durationMs = static_cast<qint64>(obj["duration_ms"].toDouble());
+    summary.sampleCount = static_cast<qint64>(obj["sample_count"].toDouble());
+    summary.avgHz = obj["avg_hz"].toDouble();
+    summary.minHz = obj["min_hz"].toDouble();
+    summary.maxHz = obj["max_hz"].toDouble();
+    summary.stddevHz = obj["stddev_hz"].toDouble();
+    summary.stabilityScore = obj["stability_score"].toDouble();
+    summary.jitterValue = obj["jitter_value"].toDouble();
+    summary.smoothnessScore = obj["smoothness_score"].toDouble();
+    summary.peakSpeed = obj["peak_speed"].toDouble();
+    summary.avgSpeed = obj["avg_speed"].toDouble();
+    summary.totalDistance = obj["total_distance"].toDouble();
+    summary.leftClickCount = static_cast<quint64>(obj["left_click_count"].toDouble());
+    summary.rightClickCount = static_cast<quint64>(obj["right_click_count"].toDouble());
+    summary.middleClickCount = static_cast<quint64>(obj["middle_click_count"].toDouble());
+    summary.wheelEventCount = static_cast<quint64>(obj["wheel_event_count"].toDouble());
+    summary.device = deviceInfoFromJson(obj["device"].toObject());
+    return summary;
 }
 
 inline MouseSample mouseSampleFromJson(const QJsonObject& obj)

@@ -4,7 +4,10 @@
 
 项目源码组织与架构设计：AGENTS_architecture.md
 项目配置与构建规范：AGENTS_cmake.md
+代码规范：代码生成规范.md
 
+
+中文交流环境
 ---
 
 ## 1. 构建命令

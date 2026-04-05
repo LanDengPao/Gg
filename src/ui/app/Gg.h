@@ -11,6 +11,7 @@
 #include <QMainWindow>
 #include <QMenu>
 #include <QPushButton>
+#include <QStringList>
 #include <QStackedWidget>
 #include <QStatusBar>
 #include <QTableWidget>
@@ -29,7 +30,6 @@ public:
     ~Gg() override;
 
 protected:
-    bool nativeEvent(const QByteArray& eventType, void* message, long* result) override;
     void changeEvent(QEvent* event) override;
     void showEvent(QShowEvent* event) override;
 
@@ -43,9 +43,7 @@ private slots:
 
 private:
     AppController* m_controller = nullptr;
-    QHash<quintptr, DeviceInfo> m_deviceCache;
     QStringList m_compareSessionIds;
-    bool m_rawInputRegistered = false;
     UiLanguage m_uiLanguage = UiLanguage::English;
 
     QLabel* m_statusLabel = nullptr;
@@ -133,14 +131,10 @@ private:
     QWidget* buildComparePage();
     QWidget* buildDevicePage();
 
-    void registerRawInput();
     void setLanguage(UiLanguage language);
     void retranslateUi();
     void updateUiActiveState();
     void refreshAll();
     void refreshHistory();
     void refreshCompare();
-    void handleRawInput(void* lParam);
-    DeviceInfo resolveDeviceInfo(void* handle);
-    static qint64 nowMicroseconds();
 };

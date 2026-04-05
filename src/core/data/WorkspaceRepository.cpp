@@ -14,34 +14,6 @@
 namespace {
 constexpr quint32 kSampleMagic = 0x47475331;
 constexpr quint16 kSampleVersion = 1;
-
-QJsonObject toJson(const SessionRecord& record)
-{
-    QJsonObject obj;
-    obj["session_id"] = record.sessionId;
-    obj["mode"] = testModeKey(record.mode);
-    obj["status"] = sessionStatusKey(record.status);
-    obj["start_time_utc"] = record.startTimeUtc.toString(Qt::ISODate);
-    obj["end_time_utc"] = record.endTimeUtc.toString(Qt::ISODate);
-    obj["duration_ms"] = static_cast<qint64>(record.durationMs);
-    obj["sample_count"] = static_cast<qint64>(record.sampleCount);
-    obj["session_dir"] = record.sessionDir;
-    return obj;
-}
-
-SessionRecord recordFromJson(const QJsonObject& obj)
-{
-    SessionRecord record;
-    record.sessionId = obj["session_id"].toString();
-    record.mode = testModeFromStoredString(obj["mode"].toString());
-    record.status = sessionStatusFromStoredString(obj["status"].toString());
-    record.startTimeUtc = QDateTime::fromString(obj["start_time_utc"].toString(), Qt::ISODate);
-    record.endTimeUtc = QDateTime::fromString(obj["end_time_utc"].toString(), Qt::ISODate);
-    record.durationMs = static_cast<qint64>(obj["duration_ms"].toDouble());
-    record.sampleCount = static_cast<qint64>(obj["sample_count"].toDouble());
-    record.sessionDir = obj["session_dir"].toString();
-    return record;
-}
 }
 
 WorkspaceRepository::WorkspaceRepository()
@@ -138,31 +110,10 @@ QVector<SessionRecord> WorkspaceRepository::loadSessions() const
             continue;
         }
 
-        SessionRecord record = recordFromJson(metaObj);
+        SessionRecord record = sessionRecordFromJson(metaObj);
         const QJsonObject summaryObj = readJsonFile(QDir(info.absoluteFilePath()).filePath(QStringLiteral("summary.json")));
         if (!summaryObj.isEmpty()) {
-            record.summary.sessionId = summaryObj["session_id"].toString();
-            record.summary.mode = record.mode;
-            record.summary.status = SessionStatus::Completed;
-            record.summary.startTimeUtc = QDateTime::fromString(summaryObj["start_time_utc"].toString(), Qt::ISODate);
-            record.summary.endTimeUtc = QDateTime::fromString(summaryObj["end_time_utc"].toString(), Qt::ISODate);
-            record.summary.durationMs = static_cast<qint64>(summaryObj["duration_ms"].toDouble());
-            record.summary.sampleCount = static_cast<qint64>(summaryObj["sample_count"].toDouble());
-            record.summary.avgHz = summaryObj["avg_hz"].toDouble();
-            record.summary.minHz = summaryObj["min_hz"].toDouble();
-            record.summary.maxHz = summaryObj["max_hz"].toDouble();
-            record.summary.stddevHz = summaryObj["stddev_hz"].toDouble();
-            record.summary.stabilityScore = summaryObj["stability_score"].toDouble();
-            record.summary.jitterValue = summaryObj["jitter_value"].toDouble();
-            record.summary.smoothnessScore = summaryObj["smoothness_score"].toDouble();
-            record.summary.peakSpeed = summaryObj["peak_speed"].toDouble();
-            record.summary.avgSpeed = summaryObj["avg_speed"].toDouble();
-            record.summary.totalDistance = summaryObj["total_distance"].toDouble();
-            record.summary.leftClickCount = static_cast<quint64>(summaryObj["left_click_count"].toDouble());
-            record.summary.rightClickCount = static_cast<quint64>(summaryObj["right_click_count"].toDouble());
-            record.summary.middleClickCount = static_cast<quint64>(summaryObj["middle_click_count"].toDouble());
-            record.summary.wheelEventCount = static_cast<quint64>(summaryObj["wheel_event_count"].toDouble());
-            record.summary.device = deviceInfoFromJson(summaryObj["device"].toObject());
+            record.summary = sessionSummaryFromJson(summaryObj);
         }
         result.push_back(record);
     }

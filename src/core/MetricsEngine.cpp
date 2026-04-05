@@ -52,6 +52,7 @@ void MetricsEngine::updateDevice(const DeviceInfo& device)
 void MetricsEngine::resetSession()
 {
     m_sessionStartUs = m_lastTimestampUs;
+    m_sessionRawSampleCount = 0;
     m_sessionSampleCount = 0;
     m_sessionSpeedSum = 0.0;
     m_sessionPeakSpeed = 0.0;
@@ -69,6 +70,9 @@ void MetricsEngine::ingestSample(const MouseSample& sample)
 {
     m_snapshot.position = sample.position;
     m_snapshot.delta = sample.delta;
+    if (m_sessionActive) {
+        ++m_sessionRawSampleCount;
+    }
 
     qint64 dtUs = 0;
     if (m_hasLastSample) {
@@ -173,7 +177,7 @@ SessionSummary MetricsEngine::buildSessionSummary(const QString& sessionId,
     summary.startTimeUtc = startUtc;
     summary.endTimeUtc = endUtc;
     summary.durationMs = std::max<qint64>(0, startUtc.msecsTo(endUtc));
-    summary.sampleCount = m_sessionSampleCount;
+    summary.sampleCount = m_sessionRawSampleCount;
     summary.avgHz = averageForWindow(m_sessionHz, m_lastTimestampUs, std::numeric_limits<qint64>::max());
     summary.minHz = summary.avgHz;
     summary.maxHz = summary.avgHz;
@@ -232,18 +236,18 @@ double MetricsEngine::averageForWindow(const QVector<HzPoint>& points, qint64 no
         return 0.0;
     }
 
-    double sum = 0.0;
+    double inverseHzSum = 0.0;
     int count = 0;
     const qint64 cutoff = windowUs == std::numeric_limits<qint64>::max()
         ? std::numeric_limits<qint64>::min()
         : nowUs - windowUs;
     for (const HzPoint& point : points) {
-        if (point.timestampUs >= cutoff) {
-            sum += point.hz;
+        if (point.timestampUs >= cutoff && point.hz > 0.0) {
+            inverseHzSum += 1.0 / point.hz;
             ++count;
         }
     }
-    return count > 0 ? sum / static_cast<double>(count) : 0.0;
+    return (count > 0 && inverseHzSum > 0.0) ? (static_cast<double>(count) / inverseHzSum) : 0.0;
 }
 
 double MetricsEngine::stddev(const QVector<HzPoint>& points, double mean)

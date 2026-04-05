@@ -1,18 +1,16 @@
 ﻿#include "AppController.h"
 
-#include <QDataStream>
 #include <QDateTime>
 #include <QDir>
 #include <QUuid>
 
-namespace {
-constexpr quint32 kSampleMagic = 0x47475331;
-constexpr quint16 kSampleVersion = 1;
-}
-
 AppController::AppController(QObject* parent)
     : QObject(parent)
 {
+    m_inputSource.setSampleHandler([this](const MouseSample& sample, const DeviceInfo& device) {
+        ingestSample(sample, device);
+    });
+
     QString error;
     m_repository.ensureWorkspace(&error);
     reloadHistory();
@@ -21,11 +19,17 @@ AppController::AppController(QObject* parent)
 
 AppController::~AppController()
 {
+    m_inputSource.stop();
     if (m_isRecording) {
         QString ignored;
         stopTest(&ignored);
     }
-    closeSampleStream();
+    m_sampleWriter.close();
+}
+
+bool AppController::bindInputWindow(quintptr windowId, QString* error)
+{
+    return m_inputSource.start(windowId, error);
 }
 
 void AppController::setUiActive(bool active)
@@ -43,16 +47,9 @@ void AppController::ingestSample(const MouseSample& sample, const DeviceInfo& de
     m_metrics.updateDevice(device);
     m_metrics.ingestSample(sample);
 
-    if (m_isRecording && m_sampleStream) {
-        (*m_sampleStream) << sample.timestampUs
-                          << static_cast<qint32>(sample.position.x())
-                          << static_cast<qint32>(sample.position.y())
-                          << static_cast<qint32>(sample.delta.x())
-                          << static_cast<qint32>(sample.delta.y())
-                          << static_cast<qint32>(sample.wheelDelta)
-                          << sample.buttonFlags
-                          << sample.eventType;
-        m_currentSession.sampleCount += 1;
+    if (m_isRecording) {
+        QString ignored;
+        m_sampleWriter.append(sample, &ignored);
     }
 }
 
@@ -85,22 +82,13 @@ bool AppController::startTest(TestMode mode, QString* error)
         return false;
     }
 
+    if (!m_sampleWriter.start(m_repository.sessionSamplesPath(m_currentSession.sessionId), error)) {
+        return false;
+    }
     if (!m_repository.saveSessionRecord(m_currentSession, error)) {
+        m_sampleWriter.close();
         return false;
     }
-
-    m_sampleFile.setFileName(m_repository.sessionSamplesPath(m_currentSession.sessionId));
-    if (!m_sampleFile.open(QIODevice::WriteOnly)) {
-        if (error) {
-            *error = uiText("Failed to create the sample file.", "无法创建采样文件");
-        }
-        return false;
-    }
-
-    closeSampleStream();
-    m_sampleStream = new QDataStream(&m_sampleFile);
-    m_sampleStream->setByteOrder(QDataStream::LittleEndian);
-    (*m_sampleStream) << kSampleMagic << kSampleVersion;
 
     m_isRecording = true;
     m_metrics.setSessionState(true, mode);
@@ -115,10 +103,11 @@ bool AppController::stopTest(QString* error)
     }
 
     m_isRecording = false;
-    closeSampleStream();
+    m_sampleWriter.close();
 
     m_currentSession.endTimeUtc = QDateTime::currentDateTimeUtc();
     m_currentSession.durationMs = m_currentSession.startTimeUtc.msecsTo(m_currentSession.endTimeUtc);
+    m_currentSession.sampleCount = m_sampleWriter.sampleCount();
     m_currentSession.status = SessionStatus::Completed;
 
     const SessionSummary summary = m_metrics.buildSessionSummary(m_currentSession.sessionId,
@@ -128,20 +117,23 @@ bool AppController::stopTest(QString* error)
                                                                  m_currentDevice);
     m_currentSession.summary = summary;
 
+    bool saveOk = true;
     if (!m_repository.saveSessionRecord(m_currentSession, error)) {
         m_currentSession.status = SessionStatus::Error;
-        return false;
+        saveOk = false;
     }
-    if (!m_repository.saveSessionSummary(summary, error)) {
+    if (saveOk && !m_repository.saveSessionSummary(summary, error)) {
         m_currentSession.status = SessionStatus::Error;
-        return false;
+        saveOk = false;
     }
 
     m_metrics.setSessionState(false, m_currentSession.mode);
-    reloadHistory();
-    emit historyChanged();
+    if (saveOk) {
+        reloadHistory();
+        emit historyChanged();
+    }
     emit stateChanged();
-    return true;
+    return saveOk;
 }
 
 LiveSnapshot AppController::snapshot() const
@@ -172,13 +164,4 @@ bool AppController::exportSession(const QString& sessionId, const QString& fileP
 void AppController::reloadHistory()
 {
     m_history = m_repository.loadSessions();
-}
-
-void AppController::closeSampleStream()
-{
-    delete m_sampleStream;
-    m_sampleStream = nullptr;
-    if (m_sampleFile.isOpen()) {
-        m_sampleFile.close();
-    }
 }

@@ -1,5 +1,4 @@
 #include "Gg.h"
-#include "WinDeviceInfo.h"
 
 #include <QAbstractButton>
 #include <QAbstractItemView>
@@ -22,16 +21,6 @@
 #include <QSplitter>
 #include <QVBoxLayout>
 #include <QWindowStateChangeEvent>
-
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-#include <winuser.h>
-#include <QOperatingSystemVersion>
-
-#ifndef MOUSE_MOVE_ABSOLUTE
-#define MOUSE_MOVE_ABSOLUTE 0x00000001
-#endif
 
 namespace {
 constexpr int kRefreshIntervalMs = 50;
@@ -634,26 +623,6 @@ QWidget* Gg::buildDevicePage()
     return page;
 }
 
-void Gg::registerRawInput()
-{
-    if (m_rawInputRegistered) {
-        return;
-    }
-
-    RAWINPUTDEVICE rid[1];
-    rid[0].usUsagePage = 0x01;
-    rid[0].usUsage = 0x02;
-    rid[0].dwFlags = RIDEV_INPUTSINK;
-    rid[0].hwndTarget = reinterpret_cast<HWND>(winId());
-
-    if (!RegisterRawInputDevices(rid, 1, sizeof(RAWINPUTDEVICE))) {
-        qWarning("Failed to register raw input");
-        return;
-    }
-
-    m_rawInputRegistered = true;
-}
-
 void Gg::updateUiActiveState()
 {
     const bool isActive = isActiveWindow() && !isMinimized();
@@ -938,103 +907,6 @@ void Gg::refreshCompare()
     }
 }
 
-void Gg::handleRawInput(void* lParam)
-{
-    HRAWINPUT hRawInput = reinterpret_cast<HRAWINPUT>(lParam);
-
-    UINT dwSize = 0;
-    GetRawInputData(hRawInput, RID_INPUT, nullptr, &dwSize, sizeof(RAWINPUTHEADER));
-    if (dwSize == 0) return;
-
-    QByteArray buffer(dwSize, 0);
-    if (GetRawInputData(hRawInput, RID_INPUT, buffer.data(), &dwSize, sizeof(RAWINPUTHEADER)) != dwSize) return;
-
-    const RAWINPUT* raw = reinterpret_cast<const RAWINPUT*>(buffer.data());
-    if (raw->header.dwType != RIM_TYPEMOUSE) return;
-
-    const RAWMOUSE& mouse = raw->data.mouse;
-    const USHORT flags = mouse.usButtonFlags;
-    const bool hasMovement = mouse.lLastX != 0 || mouse.lLastY != 0 || (mouse.usFlags & MOUSE_MOVE_ABSOLUTE) != 0;
-    if (!hasMovement && flags == 0) return;
-
-    const qint64 tsUs = nowMicroseconds();
-
-    POINT pt;
-    GetCursorPos(&pt);
-
-    MouseSample sample;
-    sample.timestampUs = tsUs;
-    sample.position = QPoint(pt.x, pt.y);
-    sample.delta = QPoint(mouse.lLastX, mouse.lLastY);
-    sample.wheelDelta = (flags & RI_MOUSE_WHEEL) ? static_cast<short>(raw->data.mouse.usButtonData) : 0;
-    sample.buttonFlags = flags;
-    sample.eventType = 0;
-
-    if (flags & (RI_MOUSE_BUTTON_1_DOWN | RI_MOUSE_BUTTON_2_DOWN | RI_MOUSE_BUTTON_3_DOWN)) sample.eventType = 1;
-    else if (flags & RI_MOUSE_WHEEL) sample.eventType = 2;
-
-    const quintptr deviceKey = reinterpret_cast<quintptr>(raw->header.hDevice);
-    if (!m_deviceCache.contains(deviceKey)) {
-        m_deviceCache.insert(deviceKey, resolveDeviceInfo(raw->header.hDevice));
-    }
-
-    DeviceInfo device = m_deviceCache.value(deviceKey);
-    device.connected = true;
-    device.lastSeenUtc = QDateTime::currentDateTimeUtc();
-    m_deviceCache.insert(deviceKey, device);
-
-    m_controller->ingestSample(sample, device);
-}
-
-DeviceInfo Gg::resolveDeviceInfo(void* handle)
-{
-    DeviceInfo info;
-    info.deviceId = QStringLiteral("mouse_%1").arg(reinterpret_cast<quintptr>(handle), 0, 16);
-    info.connected = true;
-    info.lastSeenUtc = QDateTime::currentDateTimeUtc();
-
-    UINT numDevices = 0;
-    if (GetRawInputDeviceList(nullptr, &numDevices, sizeof(RAWINPUTDEVICELIST)) == static_cast<UINT>(-1)) return info;
-
-    QVector<RAWINPUTDEVICELIST> deviceList(numDevices);
-    GetRawInputDeviceList(deviceList.data(), &numDevices, sizeof(RAWINPUTDEVICELIST));
-
-    for (const RAWINPUTDEVICELIST& dev : deviceList) {
-        if (dev.hDevice != handle) continue;
-
-        UINT size = 0;
-        GetRawInputDeviceInfo(dev.hDevice, RIDI_DEVICENAME, nullptr, &size);
-        if (size > 0) {
-            QVector<wchar_t> name(size);
-            GetRawInputDeviceInfo(dev.hDevice, RIDI_DEVICENAME, name.data(), &size);
-
-            QString deviceName = QString::fromWCharArray(name.data());
-            info.rawDeviceName = deviceName;
-            populateFriendlyMouseName(deviceName, info);
-            if (info.displayName.isEmpty()) {
-                info.displayName = QStringLiteral("Mouse");
-            }
-
-            if (deviceName.contains(QStringLiteral("#VID_"), Qt::CaseInsensitive)) {
-                QString vid = deviceName;
-                QString pid = deviceName;
-                vid = vid.mid(vid.indexOf(QStringLiteral("#VID_"), 0, Qt::CaseInsensitive) + 5, 4);
-                pid = pid.mid(pid.indexOf(QStringLiteral("#PID_"), 0, Qt::CaseInsensitive) + 5, 4);
-                info.vendorId = QStringLiteral("0x%1").arg(vid);
-                info.productId = QStringLiteral("0x%1").arg(pid);
-            }
-
-            if (deviceName.contains(QStringLiteral("HID"), Qt::CaseInsensitive)) {
-                info.connectionType = QStringLiteral("USB");
-            }
-        }
-        break;
-    }
-
-    if (info.displayName.isEmpty()) info.displayName = QStringLiteral("Mouse");
-    return info;
-}
-
 void Gg::onStartTest()
 {
     const int modeIndex = m_testModeCombo->currentData().toInt();
@@ -1127,19 +999,6 @@ void Gg::onSwitchToChinese()
     setLanguage(UiLanguage::Chinese);
 }
 
-bool Gg::nativeEvent(const QByteArray& eventType, void* message, long* result)
-{
-    Q_UNUSED(result);
-    if (eventType == "windows_generic_MSG") {
-        MSG* msg = static_cast<MSG*>(message);
-        if (msg->message == WM_INPUT) {
-            handleRawInput(reinterpret_cast<void*>(msg->lParam));
-            return true;
-        }
-    }
-    return QMainWindow::nativeEvent(eventType, message, result);
-}
-
 void Gg::changeEvent(QEvent* event)
 {
     if (event && (event->type() == QEvent::WindowStateChange || event->type() == QEvent::ActivationChange)) {
@@ -1157,7 +1016,10 @@ void Gg::showEvent(QShowEvent* event)
         connect(timer, &QTimer::timeout, this, &Gg::refreshAll);
         timer->start(200);
         QTimer::singleShot(0, this, [this] {
-            registerRawInput();
+            QString error;
+            if (!m_controller->bindInputWindow(winId(), &error)) {
+                QMessageBox::warning(this, uiText("Error", "错误"), error);
+            }
             updateUiActiveState();
             refreshHistory();
             refreshCompare();
@@ -1165,13 +1027,4 @@ void Gg::showEvent(QShowEvent* event)
         });
     }
     QMainWindow::showEvent(event);
-}
-
-qint64 Gg::nowMicroseconds()
-{
-    LARGE_INTEGER counter;
-    LARGE_INTEGER freq;
-    QueryPerformanceCounter(&counter);
-    QueryPerformanceFrequency(&freq);
-    return (counter.QuadPart * 1000000) / freq.QuadPart;
 }

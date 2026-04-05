@@ -1,10 +1,12 @@
 #pragma once
 
 #include "MetricsEngine.h"
+#include "SessionSampleWriter.h"
+#include "WinRawInputMouseSource.h"
 #include "WorkspaceRepository.h"
 
-#include <QFile>
 #include <QObject>
+#include <QtGlobal>
 
 class AppController : public QObject
 {
@@ -14,8 +16,8 @@ public:
     explicit AppController(QObject* parent = nullptr);
     ~AppController() override;
 
+    bool bindInputWindow(quintptr windowId, QString* error = nullptr);
     void setUiActive(bool active);
-    void ingestSample(const MouseSample& sample, const DeviceInfo& device);
 
     bool startTest(TestMode mode, QString* error = nullptr);
     bool stopTest(QString* error = nullptr);
@@ -37,9 +39,9 @@ private:
     QVector<SessionRecord> m_history;
     DeviceInfo m_currentDevice;
     SessionRecord m_currentSession;
+    SessionSampleWriter m_sampleWriter;
+    WinRawInputMouseSource m_inputSource;
     bool m_isRecording = false;
-    QFile m_sampleFile;
-    QDataStream* m_sampleStream = nullptr;
 
-    void closeSampleStream();
+    void ingestSample(const MouseSample& sample, const DeviceInfo& device);
 };

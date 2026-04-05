@@ -41,6 +41,7 @@ private:
 
     qint64 m_sessionStartUs = 0;
     bool m_sessionActive = false;
+    qint64 m_sessionRawSampleCount = 0;
     qint64 m_sessionSampleCount = 0;
     double m_sessionSpeedSum = 0.0;
     double m_sessionPeakSpeed = 0.0;

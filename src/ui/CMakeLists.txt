@@ -7,6 +7,8 @@ add_library(GgUi STATIC
     SparklineWidget.cpp
 )
 
+gg_configure_target(GgUi)
+
 target_include_directories(GgUi PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}
 )

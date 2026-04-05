@@ -21,7 +21,7 @@ set_target_properties(Gg PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
-target_compile_features(Gg PRIVATE cxx_std_23)
+gg_configure_target(Gg)
 
 target_include_directories(Gg PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/app
