@@ -107,9 +107,11 @@ void MetricsEngine::ingestSample(const MouseSample& sample)
 
     // 仅在发生位移时更新轨迹和抖动统计，避免静止数据污染预览。
     if (!sample.delta.isNull()) {
-        m_recentTrajectory.push_back(QPointF(sample.position));
+        m_recentTrajectory.push_back({sample.timestampUs, QPointF(sample.position)});
         if (m_recentTrajectory.size() > kMaxTrajectoryPoints) {
-            m_recentTrajectory.remove(0, m_recentTrajectory.size() - kMaxTrajectoryPoints);
+            while (m_recentTrajectory.size() > kMaxTrajectoryPoints) {
+                m_recentTrajectory.pop_front();
+            }
         }
 
         m_recentDeltas.push_back(sample.delta);
@@ -164,7 +166,12 @@ void MetricsEngine::ingestSample(const MouseSample& sample)
 
 LiveSnapshot MetricsEngine::snapshot() const
 {
-    return m_snapshot;
+    LiveSnapshot snapshot = m_snapshot;
+    snapshot.trajectory.reserve(static_cast<int>(m_recentTrajectory.size()));
+    for (const TimedPoint& point : m_recentTrajectory) {
+        snapshot.trajectory.push_back(point);
+    }
+    return snapshot;
 }
 
 SessionSummary MetricsEngine::buildSessionSummary(const QString& sessionId,
@@ -224,14 +231,13 @@ void MetricsEngine::pruneWindows(qint64 nowUs)
         m_recentHz.remove(0, removeCount);
     }
 
-    QVector<double> values;
+    QVector<TimedValue> values;
     values.reserve(std::min(kMaxHistoryPoints, m_recentHz.size()));
     const int startIndex = std::max(0, m_recentHz.size() - kMaxHistoryPoints);
     for (int i = startIndex; i < m_recentHz.size(); ++i) {
-        values.push_back(m_recentHz.at(i).hz);
+        values.push_back({m_recentHz.at(i).timestampUs, m_recentHz.at(i).hz});
     }
     m_snapshot.pollingHistory = values;
-    m_snapshot.trajectory = m_recentTrajectory;
 }
 
 double MetricsEngine::averageForWindow(const QVector<HzPoint>& points, qint64 nowUs, qint64 windowUs)

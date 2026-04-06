@@ -187,7 +187,7 @@
                  <item>
                   <widget class="QLabel" name="dashboardHzTitleLabel">
                    <property name="text">
-                    <string>Current Hz</string>
+                    <string>Realtime Hz</string>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignCenter</set>
@@ -198,16 +198,6 @@
                   <widget class="QLabel" name="dashboardHzValueLabel">
                    <property name="text">
                     <string>-</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="dashboardHzUnitLabel">
-                   <property name="text">
-                    <string>Hz</string>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignCenter</set>
@@ -243,16 +233,6 @@
                    </property>
                   </widget>
                  </item>
-                 <item>
-                  <widget class="QLabel" name="dashboardAvgUnitLabel">
-                   <property name="text">
-                    <string>Hz</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
                 </layout>
                </widget>
               </item>
@@ -276,16 +256,6 @@
                   <widget class="QLabel" name="dashboardStdValueLabel">
                    <property name="text">
                     <string>-</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="dashboardStdUnitLabel">
-                   <property name="text">
-                    <string>Hz</string>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignCenter</set>
@@ -321,16 +291,6 @@
                    </property>
                   </widget>
                  </item>
-                 <item>
-                  <widget class="QLabel" name="dashboardSpeedUnitLabel">
-                   <property name="text">
-                    <string>px/s</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
                 </layout>
                </widget>
               </item>
@@ -354,16 +314,6 @@
                   <widget class="QLabel" name="dashboardJitterValueLabel">
                    <property name="text">
                     <string>-</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="dashboardJitterUnitLabel">
-                   <property name="text">
-                    <string>px</string>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignCenter</set>
@@ -399,65 +349,131 @@
                    </property>
                   </widget>
                  </item>
-                 <item>
-                  <widget class="QLabel" name="dashboardClicksUnitLabel">
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
                 </layout>
                </widget>
               </item>
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="dashboardChartRowLayout">
-              <property name="spacing">
-               <number>12</number>
+             <widget class="QSplitter" name="dashboardChartsSplitter">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
               </property>
-              <item>
-               <widget class="QFrame" name="dashboardChartCard">
-                <layout class="QVBoxLayout" name="dashboardChartCardLayout">
-                 <property name="spacing">
-                  <number>8</number>
-                 </property>
-                 <item>
-                  <widget class="QLabel" name="dashboardChartTitleLabel">
-                   <property name="text">
-                    <string>Polling Chart</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="SparklineWidget" name="dashboardChart" native="true"/>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <widget class="QFrame" name="dashboardTrajectoryCard">
-                <layout class="QVBoxLayout" name="dashboardTrajectoryCardLayout">
-                 <property name="spacing">
-                  <number>8</number>
-                 </property>
-                 <item>
-                  <widget class="QLabel" name="dashboardTrajectoryTitleLabel">
-                   <property name="text">
-                    <string>Trajectory</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="TrajectoryWidget" name="dashboardTrajectory" native="true"/>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-             </layout>
+              <widget class="QFrame" name="dashboardChartCard">
+               <layout class="QVBoxLayout" name="dashboardChartCardLayout">
+                <property name="spacing">
+                 <number>8</number>
+                </property>
+                <item>
+                 <widget class="QLabel" name="dashboardChartTitleLabel">
+                  <property name="text">
+                   <string>Polling Chart</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="SparklineWidget" name="dashboardChart" native="true"/>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QFrame" name="dashboardTrajectoryCard">
+               <layout class="QVBoxLayout" name="dashboardTrajectoryCardLayout">
+                <property name="spacing">
+                 <number>8</number>
+                </property>
+                <item>
+                 <widget class="QLabel" name="dashboardTrajectoryTitleLabel">
+                  <property name="text">
+                   <string>Trajectory</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="dashboardTrajectoryOptionsLayout">
+                  <property name="spacing">
+                   <number>8</number>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="dashboardTrajectoryPaletteLabel">
+                    <property name="text">
+                     <string>Color Map</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="dashboardTrajectoryPaletteCombo"/>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="dashboardTrajectoryColorModeLabel">
+                    <property name="text">
+                     <string>Color Mode</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="dashboardTrajectoryColorModeCombo"/>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="dashboardTrajectoryRangeLabel">
+                    <property name="text">
+                     <string>Time Range</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QDoubleSpinBox" name="dashboardTrajectoryRangeSpinBox"/>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="dashboardTrajectoryMapCountLabel">
+                    <property name="text">
+                     <string>Map Count</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QSpinBox" name="dashboardTrajectoryMapCountSpinBox"/>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="dashboardTrajectoryDrawCountLabel">
+                    <property name="text">
+                     <string>Draw Count</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QSpinBox" name="dashboardTrajectoryDrawCountSpinBox"/>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="dashboardTrajectoryModeLabel">
+                    <property name="text">
+                     <string>Mode</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="dashboardTrajectoryModeCombo"/>
+                  </item>
+                  <item>
+                   <spacer name="dashboardTrajectoryOptionsSpacer">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <widget class="TrajectoryWidget" name="dashboardTrajectory" native="true"/>
+                </item>
+               </layout>
+              </widget>
+             </widget>
             </item>
             <item>
              <spacer name="dashboardBottomSpacer">
@@ -505,8 +521,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>280</width>
-             <height>311</height>
+             <width>799</width>
+             <height>341</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="testContentLayout">
@@ -619,12 +635,95 @@
               <property name="title">
                <string>Chart</string>
               </property>
-              <layout class="QHBoxLayout" name="chartGroupLayout">
+              <layout class="QVBoxLayout" name="chartGroupLayout">
                <item>
-                <widget class="SparklineWidget" name="testChart" native="true"/>
+                <layout class="QHBoxLayout" name="testTrajectoryOptionsLayout">
+                 <property name="spacing">
+                  <number>8</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="testTrajectoryPaletteLabel">
+                   <property name="text">
+                    <string>Color Map</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="testTrajectoryPaletteCombo"/>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="testTrajectoryColorModeLabel">
+                   <property name="text">
+                    <string>Color Mode</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="testTrajectoryColorModeCombo"/>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="testTrajectoryRangeLabel">
+                   <property name="text">
+                    <string>Time Range</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QDoubleSpinBox" name="testTrajectoryRangeSpinBox"/>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="testTrajectoryMapCountLabel">
+                   <property name="text">
+                    <string>Map Count</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QSpinBox" name="testTrajectoryMapCountSpinBox"/>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="testTrajectoryDrawCountLabel">
+                   <property name="text">
+                    <string>Draw Count</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QSpinBox" name="testTrajectoryDrawCountSpinBox"/>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="testTrajectoryModeLabel">
+                   <property name="text">
+                    <string>Mode</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="testTrajectoryModeCombo"/>
+                 </item>
+                 <item>
+                  <spacer name="testTrajectoryOptionsSpacer">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
                </item>
                <item>
-                <widget class="TrajectoryWidget" name="testTrajectory" native="true"/>
+                <widget class="QSplitter" name="chartWidgetsSplitter">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <widget class="SparklineWidget" name="testChart" native="true"/>
+                 <widget class="TrajectoryWidget" name="testTrajectory" native="true"/>
+                </widget>
                </item>
               </layout>
              </widget>

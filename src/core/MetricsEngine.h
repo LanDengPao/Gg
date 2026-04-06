@@ -2,8 +2,9 @@
 
 #include "AppTypes.h"
 
-#include <QQueue>
 #include <QVector>
+
+#include <deque>
 
 // 汇总实时鼠标输入，生成仪表盘指标和可持久化的测试汇总。
 class MetricsEngine
@@ -41,7 +42,7 @@ private:
     LiveSnapshot m_snapshot;
     QVector<HzPoint> m_recentHz;
     QVector<HzPoint> m_sessionHz;
-    QVector<QPointF> m_recentTrajectory;
+    std::deque<TimedPoint> m_recentTrajectory;
     QVector<QPoint> m_recentDeltas;
     qint64 m_lastTimestampUs = 0;
     QPoint m_lastPosition;

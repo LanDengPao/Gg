@@ -102,8 +102,8 @@
         <translation>更多</translation>
     </message>
     <message>
-        <source>Current Hz</source>
-        <translation>当前 Hz</translation>
+        <source>Realtime Hz</source>
+        <translation>实时 Hz</translation>
     </message>
     <message>
         <source>-</source>
@@ -148,6 +148,74 @@
     <message>
         <source>Trajectory</source>
         <translation>轨迹</translation>
+    </message>
+    <message>
+        <source>Color Map</source>
+        <translation>色表</translation>
+    </message>
+    <message>
+        <source>Color Mode</source>
+        <translation>着色模式</translation>
+    </message>
+    <message>
+        <source>Time Range</source>
+        <translation>时间范围</translation>
+    </message>
+    <message>
+        <source>Map Count</source>
+        <translation>映射点数</translation>
+    </message>
+    <message>
+        <source>Draw Count</source>
+        <translation>绘制点数</translation>
+    </message>
+    <message>
+        <source>Blue to Red</source>
+        <translation>蓝到红</translation>
+    </message>
+    <message>
+        <source>Viridis</source>
+        <translation>Viridis</translation>
+    </message>
+    <message>
+        <source>Ocean</source>
+        <translation>海洋</translation>
+    </message>
+    <message>
+        <source>Sunset</source>
+        <translation>日落</translation>
+    </message>
+    <message>
+        <source>Full Window</source>
+        <translation>完整窗口</translation>
+    </message>
+    <message>
+        <source>Last 1 s</source>
+        <translation>最近 1 秒</translation>
+    </message>
+    <message>
+        <source>Last 3 s</source>
+        <translation>最近 3 秒</translation>
+    </message>
+    <message>
+        <source>Last 5 s</source>
+        <translation>最近 5 秒</translation>
+    </message>
+    <message>
+        <source>Last 10 s</source>
+        <translation>最近 10 秒</translation>
+    </message>
+    <message>
+        <source>Loop</source>
+        <translation>循环</translation>
+    </message>
+    <message>
+        <source>Path</source>
+        <translation>路径</translation>
+    </message>
+    <message>
+        <source>Points</source>
+        <translation>点</translation>
     </message>
     <message>
         <source>Test Mode</source>
@@ -338,8 +406,8 @@
         <translation>状态: 录制中</translation>
     </message>
     <message>
-        <source>Current</source>
-        <translation>当前</translation>
+        <source>Realtime</source>
+        <translation>实时</translation>
     </message>
     <message>
         <source>Completed!</source>

@@ -320,6 +320,20 @@ QComboBox QAbstractItemView {
     selection-color: #1F2937;
 }
 
+QSplitter::handle {
+    background: #E3E8F0;
+    margin: 6px 2px;
+    border-radius: 3px;
+}
+
+QSplitter::handle:hover {
+    background: #B7C3D2;
+}
+
+QSplitter::handle:horizontal {
+    width: 10px;
+}
+
 QTableWidget {
     background: #FFFFFF;
     color: #1F2937;

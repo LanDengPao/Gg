@@ -6,8 +6,11 @@
 #include <QAbstractItemView>
 #include <QApplication>
 #include <QChar>
+#include <QColor>
+#include <QComboBox>
 #include <QCoreApplication>
 #include <QDateTime>
+#include <QDoubleSpinBox>
 #include <QDir>
 #include <QFile>
 #include <QFileDialog>
@@ -16,8 +19,11 @@
 #include <QListWidget>
 #include <QLocale>
 #include <QMessageBox>
+#include <QSignalBlocker>
 #include <QShowEvent>
 #include <QSizePolicy>
+#include <QSplitter>
+#include <QSpinBox>
 #include <QString>
 #include <QStyle>
 #include <QTableWidgetItem>
@@ -26,6 +32,64 @@
 namespace {
 constexpr int kRefreshIntervalMs = 200;
 constexpr int kHistoryActionColumn = 7;
+
+enum class TrajectoryPalettePreset
+{
+    CoolToWarm = 0,
+    Viridis = 1,
+    Ocean = 2,
+    Sunset = 3
+};
+
+QVector<QColor> trajectoryPaletteColors(TrajectoryPalettePreset preset)
+{
+    switch (preset) {
+    case TrajectoryPalettePreset::CoolToWarm:
+        return {QColor(37, 99, 235), QColor(16, 185, 129), QColor(245, 158, 11), QColor(239, 68, 68)};
+    case TrajectoryPalettePreset::Viridis:
+        return {QColor(68, 1, 84), QColor(59, 82, 139), QColor(33, 145, 140), QColor(94, 201, 98), QColor(253, 231, 37)};
+    case TrajectoryPalettePreset::Ocean:
+        return {QColor(8, 47, 73), QColor(3, 105, 161), QColor(6, 182, 212), QColor(125, 211, 252)};
+    case TrajectoryPalettePreset::Sunset:
+        return {QColor(76, 29, 149), QColor(190, 24, 93), QColor(249, 115, 22), QColor(251, 191, 36)};
+    }
+    return {QColor(37, 99, 235), QColor(16, 185, 129), QColor(245, 158, 11), QColor(239, 68, 68)};
+}
+
+QVector<QColor> selectedTrajectoryPaletteColors(const QComboBox* combo)
+{
+    if (!combo) {
+        return trajectoryPaletteColors(TrajectoryPalettePreset::CoolToWarm);
+    }
+    return trajectoryPaletteColors(static_cast<TrajectoryPalettePreset>(combo->currentData().toInt()));
+}
+
+qint64 selectedTrajectoryWindowUs(const QDoubleSpinBox* spinBox)
+{
+    return spinBox ? static_cast<qint64>(spinBox->value() * 1000.0 * 1000.0) : 0;
+}
+
+TrajectoryWidget::DrawMode selectedTrajectoryDrawMode(const QComboBox* combo)
+{
+    return combo ? static_cast<TrajectoryWidget::DrawMode>(combo->currentData().toInt())
+                 : TrajectoryWidget::DrawMode::Path;
+}
+
+TrajectoryWidget::ColorMode selectedTrajectoryColorMode(const QComboBox* combo)
+{
+    return combo ? static_cast<TrajectoryWidget::ColorMode>(combo->currentData().toInt())
+                 : TrajectoryWidget::ColorMode::TimeRange;
+}
+
+int selectedTrajectoryMapPointCount(const QSpinBox* spinBox)
+{
+    return spinBox ? spinBox->value() : 32;
+}
+
+int selectedTrajectoryDrawPointCount(const QSpinBox* spinBox)
+{
+    return spinBox ? spinBox->value() : 320;
+}
 
 QString formatHz(double hz)
 {
@@ -138,14 +202,63 @@ void Gg::initializeUi()
                           static_cast<QWidget*>(m_ui->deviceInfoCard)}) {
         card->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     }
+    for (QWidget* chartWidget : {static_cast<QWidget*>(m_ui->dashboardChart),
+                                 static_cast<QWidget*>(m_ui->dashboardTrajectory),
+                                 static_cast<QWidget*>(m_ui->testChart),
+                                 static_cast<QWidget*>(m_ui->testTrajectory)}) {
+        chartWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    }
+    m_ui->dashboardChartCard->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    m_ui->dashboardTrajectoryCard->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    m_ui->chartGroup->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    m_ui->dashboardChartsSplitter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    m_ui->chartWidgetsSplitter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    m_ui->dashboardChartsSplitter->setHandleWidth(10);
+    m_ui->chartWidgetsSplitter->setHandleWidth(10);
 
+    m_ui->dashboardContentLayout->setStretch(0, 0);
+    m_ui->dashboardContentLayout->setStretch(1, 0);
+    m_ui->dashboardContentLayout->setStretch(2, 1);
+    m_ui->dashboardContentLayout->setStretch(3, 0);
+    m_ui->testContentLayout->setStretch(0, 0);
+    m_ui->testContentLayout->setStretch(1, 0);
+    m_ui->testContentLayout->setStretch(2, 0);
+    m_ui->testContentLayout->setStretch(3, 1);
+    m_ui->testContentLayout->setStretch(4, 0);
     m_ui->dashboardTopRowLayout->setStretch(0, 1);
     m_ui->dashboardTopRowLayout->setStretch(1, 1);
     for (int i = 0; i < 6; ++i) {
         m_ui->dashboardStatsRowLayout->setStretch(i, 1);
     }
-    m_ui->dashboardChartRowLayout->setStretch(0, 2);
-    m_ui->dashboardChartRowLayout->setStretch(1, 1);
+    m_ui->dashboardChartCardLayout->setStretch(1, 1);
+    m_ui->dashboardTrajectoryCardLayout->setStretch(2, 1);
+    m_ui->dashboardChartsSplitter->setChildrenCollapsible(false);
+    m_ui->dashboardChartsSplitter->setStretchFactor(0, 2);
+    m_ui->dashboardChartsSplitter->setStretchFactor(1, 1);
+    m_ui->chartGroupLayout->setStretch(1, 1);
+    m_ui->chartWidgetsSplitter->setChildrenCollapsible(false);
+    m_ui->chartWidgetsSplitter->setStretchFactor(0, 2);
+    m_ui->chartWidgetsSplitter->setStretchFactor(1, 1);
+
+    for (QComboBox* combo : {m_ui->dashboardTrajectoryPaletteCombo,
+                             m_ui->dashboardTrajectoryColorModeCombo,
+                             m_ui->dashboardTrajectoryModeCombo,
+                             m_ui->testTrajectoryPaletteCombo,
+                             m_ui->testTrajectoryColorModeCombo,
+                             m_ui->testTrajectoryModeCombo}) {
+        combo->setMinimumWidth(96);
+        combo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+        combo->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    }
+    for (QWidget* spinBox : {static_cast<QWidget*>(m_ui->dashboardTrajectoryRangeSpinBox),
+                             static_cast<QWidget*>(m_ui->dashboardTrajectoryMapCountSpinBox),
+                             static_cast<QWidget*>(m_ui->dashboardTrajectoryDrawCountSpinBox),
+                             static_cast<QWidget*>(m_ui->testTrajectoryRangeSpinBox),
+                             static_cast<QWidget*>(m_ui->testTrajectoryMapCountSpinBox),
+                             static_cast<QWidget*>(m_ui->testTrajectoryDrawCountSpinBox)}) {
+        spinBox->setMinimumWidth(72);
+        spinBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    }
 
     m_ui->navigationList->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_ui->navigationList->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -159,6 +272,7 @@ void Gg::initializeUi()
     connect(m_ui->navigationList, &QListWidget::currentRowChanged, this, [this](int index) {
         if (index >= 0) {
             m_ui->pageStack->setCurrentIndex(index);
+            refreshAll();
         }
     });
 
@@ -181,6 +295,8 @@ void Gg::initializeUi()
     m_ui->compareTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_ui->compareTable->setShowGrid(false);
     m_ui->compareTable->verticalHeader()->setVisible(false);
+
+    initializeTrajectoryControls();
 
     connect(m_ui->startButton, &QPushButton::clicked, this, &Gg::onStartTest);
     connect(m_ui->stopButton, &QPushButton::clicked, this, &Gg::onStopTest);
@@ -259,6 +375,208 @@ void Gg::updateStatusTone(bool recording)
     updateWidgetStyle(m_statusLabel);
 }
 
+void Gg::initializeTrajectoryControls()
+{
+    const auto addPaletteItems = [](QComboBox* combo) {
+        if (!combo) {
+            return;
+        }
+        combo->clear();
+        combo->addItem(QString(), static_cast<int>(TrajectoryPalettePreset::CoolToWarm));
+        combo->addItem(QString(), static_cast<int>(TrajectoryPalettePreset::Viridis));
+        combo->addItem(QString(), static_cast<int>(TrajectoryPalettePreset::Ocean));
+        combo->addItem(QString(), static_cast<int>(TrajectoryPalettePreset::Sunset));
+        combo->setCurrentIndex(0);
+    };
+    const auto setupTimeRangeSpinBox = [](QDoubleSpinBox* spinBox) {
+        if (!spinBox) {
+            return;
+        }
+        spinBox->setDecimals(2);
+        spinBox->setRange(0.0, 600.0);
+        spinBox->setSingleStep(0.1);
+        spinBox->setValue(0.0);
+        spinBox->setSuffix(QStringLiteral(" s"));
+    };
+    const auto addModeItems = [](QComboBox* combo) {
+        if (!combo) {
+            return;
+        }
+        combo->clear();
+        combo->addItem(QString(), static_cast<int>(TrajectoryWidget::DrawMode::Path));
+        combo->addItem(QString(), static_cast<int>(TrajectoryWidget::DrawMode::Points));
+        combo->setCurrentIndex(0);
+    };
+    const auto addColorModeItems = [](QComboBox* combo) {
+        if (!combo) {
+            return;
+        }
+        combo->clear();
+        combo->addItem(QString(), static_cast<int>(TrajectoryWidget::ColorMode::TimeRange));
+        combo->addItem(QString(), static_cast<int>(TrajectoryWidget::ColorMode::Loop));
+        combo->setCurrentIndex(0);
+    };
+    const auto setupMapCount = [](QSpinBox* spinBox) {
+        if (!spinBox) {
+            return;
+        }
+        spinBox->setRange(1, 320);
+        spinBox->setValue(32);
+        spinBox->setSingleStep(1);
+    };
+    const auto setupDrawCount = [](QSpinBox* spinBox) {
+        if (!spinBox) {
+            return;
+        }
+        spinBox->setRange(1, 320);
+        spinBox->setValue(320);
+        spinBox->setSingleStep(1);
+    };
+
+    addPaletteItems(m_ui->dashboardTrajectoryPaletteCombo);
+    addPaletteItems(m_ui->testTrajectoryPaletteCombo);
+    setupTimeRangeSpinBox(m_ui->dashboardTrajectoryRangeSpinBox);
+    setupTimeRangeSpinBox(m_ui->testTrajectoryRangeSpinBox);
+    addModeItems(m_ui->dashboardTrajectoryModeCombo);
+    addModeItems(m_ui->testTrajectoryModeCombo);
+    addColorModeItems(m_ui->dashboardTrajectoryColorModeCombo);
+    addColorModeItems(m_ui->testTrajectoryColorModeCombo);
+    setupMapCount(m_ui->dashboardTrajectoryMapCountSpinBox);
+    setupMapCount(m_ui->testTrajectoryMapCountSpinBox);
+    setupDrawCount(m_ui->dashboardTrajectoryDrawCountSpinBox);
+    setupDrawCount(m_ui->testTrajectoryDrawCountSpinBox);
+
+    auto connectSyncedCombo = [this](QComboBox* source, QComboBox* target) {
+        connect(source,
+                QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this,
+                [this, target](int index) {
+                    if (target && target->currentIndex() != index) {
+                        const QSignalBlocker blocker(target);
+                        target->setCurrentIndex(index);
+                    }
+                    updateTrajectoryControlState();
+                    refreshAll();
+                });
+    };
+
+    connectSyncedCombo(m_ui->dashboardTrajectoryPaletteCombo, m_ui->testTrajectoryPaletteCombo);
+    connectSyncedCombo(m_ui->testTrajectoryPaletteCombo, m_ui->dashboardTrajectoryPaletteCombo);
+    connectSyncedCombo(m_ui->dashboardTrajectoryModeCombo, m_ui->testTrajectoryModeCombo);
+    connectSyncedCombo(m_ui->testTrajectoryModeCombo, m_ui->dashboardTrajectoryModeCombo);
+    connectSyncedCombo(m_ui->dashboardTrajectoryColorModeCombo, m_ui->testTrajectoryColorModeCombo);
+    connectSyncedCombo(m_ui->testTrajectoryColorModeCombo, m_ui->dashboardTrajectoryColorModeCombo);
+
+    auto connectSyncedDoubleSpinBox = [this](QDoubleSpinBox* source, QDoubleSpinBox* target) {
+        connect(source,
+                QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+                this,
+                [this, target](double value) {
+                    if (target && !qFuzzyCompare(target->value() + 1.0, value + 1.0)) {
+                        const QSignalBlocker blocker(target);
+                        target->setValue(value);
+                    }
+                    refreshAll();
+                });
+    };
+
+    connectSyncedDoubleSpinBox(m_ui->dashboardTrajectoryRangeSpinBox, m_ui->testTrajectoryRangeSpinBox);
+    connectSyncedDoubleSpinBox(m_ui->testTrajectoryRangeSpinBox, m_ui->dashboardTrajectoryRangeSpinBox);
+
+    auto connectSyncedSpinBox = [this](QSpinBox* source, QSpinBox* target) {
+        connect(source,
+                QOverload<int>::of(&QSpinBox::valueChanged),
+                this,
+                [this, target](int value) {
+                    if (target && target->value() != value) {
+                        const QSignalBlocker blocker(target);
+                        target->setValue(value);
+                    }
+                    updateTrajectoryControlState();
+                    refreshAll();
+                });
+    };
+
+    connectSyncedSpinBox(m_ui->dashboardTrajectoryMapCountSpinBox, m_ui->testTrajectoryMapCountSpinBox);
+    connectSyncedSpinBox(m_ui->testTrajectoryMapCountSpinBox, m_ui->dashboardTrajectoryMapCountSpinBox);
+    connectSyncedSpinBox(m_ui->dashboardTrajectoryDrawCountSpinBox, m_ui->testTrajectoryDrawCountSpinBox);
+    connectSyncedSpinBox(m_ui->testTrajectoryDrawCountSpinBox, m_ui->dashboardTrajectoryDrawCountSpinBox);
+
+    updateTrajectoryControlState();
+}
+
+void Gg::updateTrajectoryControlState()
+{
+    const bool useTimeRange = selectedTrajectoryColorMode(m_ui->dashboardTrajectoryColorModeCombo)
+        == TrajectoryWidget::ColorMode::TimeRange;
+    const int drawPointCount = selectedTrajectoryDrawPointCount(m_ui->dashboardTrajectoryDrawCountSpinBox);
+
+    const auto applyState = [useTimeRange, drawPointCount](QDoubleSpinBox* rangeSpinBox,
+                                           QSpinBox* mapCountSpinBox,
+                                           QSpinBox* drawCountSpinBox) {
+        if (rangeSpinBox) {
+            rangeSpinBox->setEnabled(useTimeRange);
+        }
+        if (mapCountSpinBox) {
+            mapCountSpinBox->setEnabled(!useTimeRange);
+            mapCountSpinBox->setMaximum(drawPointCount);
+            if (mapCountSpinBox->value() > drawPointCount) {
+                const QSignalBlocker blocker(mapCountSpinBox);
+                mapCountSpinBox->setValue(drawPointCount);
+            }
+        }
+        if (drawCountSpinBox) {
+            drawCountSpinBox->setEnabled(true);
+        }
+    };
+
+    applyState(m_ui->dashboardTrajectoryRangeSpinBox,
+               m_ui->dashboardTrajectoryMapCountSpinBox,
+               m_ui->dashboardTrajectoryDrawCountSpinBox);
+    applyState(m_ui->testTrajectoryRangeSpinBox,
+               m_ui->testTrajectoryMapCountSpinBox,
+               m_ui->testTrajectoryDrawCountSpinBox);
+}
+
+void Gg::updateTrajectoryWidgets(const QVector<TimedPoint>& points)
+{
+    QVector<TimedPoint> visiblePoints;
+    if (!points.isEmpty()) {
+        const int drawPointCount = qMin(selectedTrajectoryDrawPointCount(m_ui->dashboardTrajectoryDrawCountSpinBox), points.size());
+        visiblePoints.reserve(drawPointCount);
+        const int startIndex = points.size() - drawPointCount;
+        for (int i = startIndex; i < points.size(); ++i) {
+            visiblePoints.push_back(points.at(i));
+        }
+    }
+
+    const QVector<QColor> colors = selectedTrajectoryPaletteColors(m_ui->dashboardTrajectoryPaletteCombo);
+    const TrajectoryWidget::DrawMode drawMode = selectedTrajectoryDrawMode(m_ui->dashboardTrajectoryModeCombo);
+    const TrajectoryWidget::ColorMode colorMode = selectedTrajectoryColorMode(m_ui->dashboardTrajectoryColorModeCombo);
+    const int mapPointCount = selectedTrajectoryMapPointCount(m_ui->dashboardTrajectoryMapCountSpinBox);
+    const qint64 windowUs = selectedTrajectoryWindowUs(m_ui->dashboardTrajectoryRangeSpinBox);
+    const bool hasCustomTimeRange = colorMode == TrajectoryWidget::ColorMode::TimeRange && windowUs > 0 && !visiblePoints.isEmpty();
+    const qint64 endUs = hasCustomTimeRange ? visiblePoints.last().timestampUs : 0;
+    const qint64 startUs = hasCustomTimeRange ? qMax<qint64>(0, endUs - windowUs) : 0;
+    const auto applyWidget = [&visiblePoints, &colors, drawMode, colorMode, mapPointCount, hasCustomTimeRange, startUs, endUs](TrajectoryWidget* widget) {
+        if (!widget) {
+            return;
+        }
+        widget->setRenderData(visiblePoints, colors, drawMode, colorMode, mapPointCount, hasCustomTimeRange, startUs, endUs);
+    };
+
+    switch (m_ui->pageStack->currentIndex()) {
+    case 0:
+        applyWidget(m_ui->dashboardTrajectory);
+        break;
+    case 1:
+        applyWidget(m_ui->testTrajectory);
+        break;
+    default:
+        break;
+    }
+}
+
 bool Gg::activateChineseTranslation()
 {
     // 先移除旧翻译器，避免重复安装造成翻译结果混杂。
@@ -325,20 +643,21 @@ void Gg::retranslateUi()
     m_ui->deviceInfoLabel->setText(tr("No Mouse"));
     m_ui->deviceMoreButton->setText(tr("More"));
 
-    m_ui->dashboardHzTitleLabel->setText(tr("Current Hz"));
+    m_ui->dashboardHzTitleLabel->setText(tr("Realtime Hz"));
     m_ui->dashboardAvgTitleLabel->setText(tr("1s Avg"));
     m_ui->dashboardStdTitleLabel->setText(tr("Std Dev"));
     m_ui->dashboardSpeedTitleLabel->setText(tr("Speed"));
     m_ui->dashboardJitterTitleLabel->setText(tr("Jitter"));
     m_ui->dashboardClicksTitleLabel->setText(tr("Clicks"));
-    m_ui->dashboardHzUnitLabel->setText(QStringLiteral("Hz"));
-    m_ui->dashboardAvgUnitLabel->setText(QStringLiteral("Hz"));
-    m_ui->dashboardStdUnitLabel->setText(QStringLiteral("Hz"));
-    m_ui->dashboardSpeedUnitLabel->setText(QStringLiteral("px/s"));
-    m_ui->dashboardJitterUnitLabel->setText(QStringLiteral("px"));
-    m_ui->dashboardClicksUnitLabel->setText(QString());
-    m_ui->dashboardChartTitleLabel->setText(tr("Polling Chart"));
-    m_ui->dashboardTrajectoryTitleLabel->setText(tr("Trajectory"));
+    m_ui->dashboardTrajectoryPaletteCombo->setItemText(0, tr("Blue to Red"));
+    m_ui->dashboardTrajectoryPaletteCombo->setItemText(1, tr("Viridis"));
+    m_ui->dashboardTrajectoryPaletteCombo->setItemText(2, tr("Ocean"));
+    m_ui->dashboardTrajectoryPaletteCombo->setItemText(3, tr("Sunset"));
+    m_ui->dashboardTrajectoryColorModeCombo->setItemText(0, tr("Time Range"));
+    m_ui->dashboardTrajectoryColorModeCombo->setItemText(1, tr("Loop"));
+    m_ui->dashboardTrajectoryRangeSpinBox->setSpecialValueText(tr("Full Window"));
+    m_ui->dashboardTrajectoryModeCombo->setItemText(0, tr("Path"));
+    m_ui->dashboardTrajectoryModeCombo->setItemText(1, tr("Points"));
 
     m_ui->testModeGroup->setTitle(tr("Test Mode"));
     m_ui->testModeCombo->setItemText(0, testModeToDisplayString(TestMode::PollingRate));
@@ -349,7 +668,15 @@ void Gg::retranslateUi()
     m_ui->testStateLabel->setText(tr("Status: Idle"));
     m_ui->metricsGroup->setTitle(tr("Metrics"));
     m_ui->testResultLabel->setText(tr("Start a test to collect data."));
-    m_ui->chartGroup->setTitle(tr("Chart"));
+    m_ui->testTrajectoryPaletteCombo->setItemText(0, tr("Blue to Red"));
+    m_ui->testTrajectoryPaletteCombo->setItemText(1, tr("Viridis"));
+    m_ui->testTrajectoryPaletteCombo->setItemText(2, tr("Ocean"));
+    m_ui->testTrajectoryPaletteCombo->setItemText(3, tr("Sunset"));
+    m_ui->testTrajectoryColorModeCombo->setItemText(0, tr("Time Range"));
+    m_ui->testTrajectoryColorModeCombo->setItemText(1, tr("Loop"));
+    m_ui->testTrajectoryRangeSpinBox->setSpecialValueText(tr("Full Window"));
+    m_ui->testTrajectoryModeCombo->setItemText(0, tr("Path"));
+    m_ui->testTrajectoryModeCombo->setItemText(1, tr("Points"));
 
     m_ui->historyTitleLabel->setText(tr("History"));
     m_ui->historyExportButton->setText(tr("Export"));
@@ -417,7 +744,8 @@ void Gg::refreshAll()
     m_ui->dashboardClicksValueLabel->setText(QString::number(snap.leftClickCount + snap.rightClickCount + snap.middleClickCount));
 
     m_ui->dashboardChart->setValues(snap.pollingHistory);
-    m_ui->dashboardTrajectory->setPoints(snap.trajectory);
+    m_ui->testChart->setValues(snap.pollingHistory);
+    updateTrajectoryWidgets(snap.trajectory);
 
     if (!last.sessionId.isEmpty()) {
         m_ui->lastSessionLabel->setText(QStringLiteral("%1 | %2 | %3 %4 Hz | %5 %6")
@@ -460,14 +788,12 @@ void Gg::refreshAll()
 
         const qint64 elapsed = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch() - snap.recordingStartMs;
         m_ui->testMetricsLabel->setText(QStringLiteral("%1: %2 | %3: %4 | %5: %6")
-                                            .arg(tr("Current"))
+                                            .arg(tr("Realtime"))
                                             .arg(formatHz(snap.currentHz))
                                             .arg(tr("Avg"))
                                             .arg(formatHz(snap.avgHz30s))
                                             .arg(tr("Time"))
                                             .arg(formatDuration(elapsed)));
-        m_ui->testChart->setValues(snap.pollingHistory);
-        m_ui->testTrajectory->setPoints(snap.trajectory);
         return;
     }
 

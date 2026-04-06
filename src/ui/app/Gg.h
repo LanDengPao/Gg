@@ -9,6 +9,8 @@
 #include <memory>
 
 class QLabel;
+class QComboBox;
+class QSpinBox;
 class QEvent;
 class QShowEvent;
 class QWidget;
@@ -59,6 +61,12 @@ private:
     void updateUiActiveState();
     // 根据最新实时快照刷新仪表盘和设备信息控件。
     void refreshAll();
+    // 初始化轨迹图显示参数控件和联动逻辑。
+    void initializeTrajectoryControls();
+    // 根据当前着色模式启停相关参数控件。
+    void updateTrajectoryControlState();
+    // 将当前界面的轨迹显示参数应用到两个轨迹控件。
+    void updateTrajectoryWidgets(const QVector<TimedPoint>& points);
     // 基于持久化的会话记录重建历史表格。
     void refreshHistory();
     // 基于当前选中的会话编号重建对比表格。

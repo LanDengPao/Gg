@@ -5,6 +5,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QPoint>
+#include <QPointF>
 #include <QString>
 #include <QtGlobal>
 #include <QVector>
@@ -52,6 +53,20 @@ struct MouseSample
     int wheelDelta = 0;
     quint16 buttonFlags = 0;
     quint8 eventType = 0;
+};
+
+// 为折线图保留时间戳和值，支持 X 轴时间标识显示。
+struct TimedValue
+{
+    qint64 timestampUs = 0;
+    double value = 0.0;
+};
+
+// 为轨迹图保留时间戳和坐标，支持按时间着色。
+struct TimedPoint
+{
+    qint64 timestampUs = 0;
+    QPointF position;
 };
 
 // 保存一次录制完成后计算得到的聚合指标。
@@ -122,8 +137,8 @@ struct LiveSnapshot
     quint64 rightClickCount = 0;
     quint64 middleClickCount = 0;
     quint64 wheelEventCount = 0;
-    QVector<double> pollingHistory;
-    QVector<QPointF> trajectory;
+    QVector<TimedValue> pollingHistory;
+    QVector<TimedPoint> trajectory;
 };
 
 // 返回测试模式对应的稳定存储键。
