@@ -1,6 +1,6 @@
 .vs/
 .codex/
-.claude/
+.claude/settings.local.json
 x64/
 build/
 build*/
