@@ -106,7 +106,7 @@ cmake --build --preset package-release
 ```
 
 ## 项目结构
-
+ 
 ```text
 Gg/
 ├── cmake/                    # 全局 CMake 配置
